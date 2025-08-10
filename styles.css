@@ -110,7 +110,7 @@ body{
 .card-notes{margin-top:6px;color:#bfc2ce;white-space:pre-wrap}
 .card-actions{display:flex;gap:8px;margin-top:10px}
 
-/* Modal (centré + marges anti-contact) */
+/* Modal (centré + marges/padding confort) */
 .modal{border:0;padding:0;background:transparent;z-index:300;position:fixed;inset:0}
 .modal[open]{display:flex;align-items:center;justify-content:center}
 .modal::backdrop{background:rgba(0,0,0,.55)}
@@ -118,14 +118,9 @@ body{
   background:var(--panel);
   border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
-
-  /* largeur limitée + marges latérales confortables */
   width:min(520px, 92vw);
-
-  /* padding interne plus large pour éviter tout contact aux bords */
   padding:22px 22px calc(22px + env(safe-area-inset-bottom));
   max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));
-
   margin:auto; color:var(--text); box-shadow:var(--shadow);
   display:flex; flex-direction:column; overflow:auto;
 }
@@ -133,10 +128,11 @@ body{
 .field{display:grid;gap:6px;margin:10px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 
-/* Champs — clamps iOS (select/time) + aucun débordement */
+/* Champs (anti-débordement) */
 .field input,
 .field textarea,
 .modal-card select{
+  display:block;
   width:100%;
   min-width:0;
   max-width:100%;
@@ -145,20 +141,10 @@ body{
   border-radius:12px;
   padding:.75rem 1rem;
   outline:none;
-}
-input[type="time"], select{
-  -webkit-appearance:none; appearance:none; background-image:none;
-}
-.field input, .modal-card select{
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  box-sizing:border-box;
 }
 .field input:focus,.field textarea:focus,.modal-card select:focus{
   box-shadow:0 0 0 6px var(--ring);border-color:transparent
-}
-.actions{
-  position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;
-  margin-top:16px;padding-top:10px;
-  background:linear-gradient(180deg,rgba(27,28,33,0),var(--panel) 50%)
 }
 
 /* Très petits écrans */
@@ -181,3 +167,20 @@ html[data-theme="porcelaine"] .card{border-color:#e5e7eb}
 html[data-theme="porcelaine"] .field input,
 html[data-theme="porcelaine"] .field textarea,
 html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e5e7eb;color:#0f172a}
+
+/* ---- iPhone specific fix (safe areas + native controls) ---- */
+.modal-card{
+  width: min(520px, 100%);
+  margin-left: max(16px, env(safe-area-inset-left));
+  margin-right: max(16px, env(safe-area-inset-right));
+  padding: 22px clamp(18px, 5vw, 26px) calc(22px + env(safe-area-inset-bottom));
+}
+
+@supports (-webkit-touch-callout: none) {
+  select, input[type="time"]{
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: none;
+    padding-right: 2.6rem; /* espace pour la flèche/roue iOS */
+  }
+}
