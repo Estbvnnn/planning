@@ -1,7 +1,6 @@
 /* iOS: stop zoom on tap/focus */
 html { -webkit-text-size-adjust: 100%; }
 
-/* min 16px on interactive to avoid zoom */
 button,
 .btn, .mini-btn, .chip, .fab, .hamburger, .icon-btn,
 input, select, textarea, label {
@@ -110,41 +109,43 @@ body{
 .card-notes{margin-top:6px;color:#bfc2ce;white-space:pre-wrap}
 .card-actions{display:flex;gap:8px;margin-top:10px}
 
-/* Modal (centered + safe paddings) */
-.modal{border:0;padding:0;background:transparent;z-index:300;position:fixed;inset:0}
-.modal[open]{display:flex;align-items:center;justify-content:center}
+/* ---------- Dialogs ---------- */
+/* caché par défaut */
+.modal{
+  border:0; padding:0; background:transparent; position:fixed; inset:0;
+  display:none; z-index:1000;
+}
+/* visible seulement quand [open] */
+.modal[open]{
+  display:grid; place-items:center;
+  /* safe areas iPhone */
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+  padding-left:max(18px, env(safe-area-inset-left));
+  padding-right:max(18px, env(safe-area-inset-right));
+}
 .modal::backdrop{background:rgba(0,0,0,.55)}
 .modal-card{
-  background:var(--panel);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:18px;
-  width:min(520px, 92vw);
-  padding:22px 22px calc(22px + env(safe-area-inset-bottom));
-  max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));
-  margin:auto; color:var(--text); box-shadow:var(--shadow);
-  display:flex; flex-direction:column; overflow:auto;
+  background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:18px;
+  width:min(520px, 100%); max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));
+  padding:20px; margin:auto; color:var(--text); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; overflow:auto; -webkit-overflow-scrolling:touch;
 }
 .modal-card h3{margin:4px 0 12px;font-size:26px}
 .field{display:grid;gap:6px;margin:10px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 
-/* Inputs (no overflow) */
+/* Inputs: aucune fuite à droite */
 .field input,
 .field textarea,
 .modal-card select{
-  display:block;
-  width:100%;
-  min-width:0;
-  max-width:100%;
-  background:#14161b;color:var(--text);
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:12px;
-  padding:.75rem 1rem;
-  outline:none;
-  box-sizing:border-box;
+  display:block; width:100%; min-width:0; max-width:100%;
+  background:#14161b; color:var(--text);
+  border:1px solid rgba(255,255,255,.14); border-radius:12px;
+  padding:.75rem 1rem; outline:none; box-sizing:border-box;
 }
 .field input:focus,.field textarea:focus,.modal-card select:focus{
-  box-shadow:0 0 0 6px var(--ring);border-color:transparent
+  box-shadow:0 0 0 6px var(--ring); border-color:transparent;
 }
 
 @media (max-width: 360px){
@@ -167,29 +168,10 @@ html[data-theme="porcelaine"] .field input,
 html[data-theme="porcelaine"] .field textarea,
 html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e5e7eb;color:#0f172a}
 
-/* ---- iPhone specific fix (safe areas + native controls) ---- */
-/* Padding via the dialog container to guarantee margins on iPhone */
-.modal{
-  display:grid !important;
-  place-items:center !important;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:calc(18px + env(safe-area-inset-bottom));
-  padding-left:max(18px, env(safe-area-inset-left));
-  padding-right:max(18px, env(safe-area-inset-right));
-  margin:0 !important;
-}
-.modal-card{
-  width:100% !important;
-  max-width:520px !important;
-  padding:20px !important;
-  overflow:auto; -webkit-overflow-scrolling:touch;
-}
-
+/* iOS: retire déco native et réserve un peu d’espace à droite */
 @supports (-webkit-touch-callout: none) {
   select, input[type="time"]{
-    -webkit-appearance: none;
-    appearance: none;
-    background-image: none;
+    -webkit-appearance: none; appearance: none; background-image: none;
     padding-right: 2.4rem;
   }
 }

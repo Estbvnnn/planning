@@ -1,7 +1,7 @@
-// Planis v6.3.8 — iPhone modal paddings + close overlays robust
+// Planis v6.3.9 — dialogs exclusifs + close overlays + iPhone friendly
 const $  = (q, r=document) => r.querySelector(q);
 
-/* -------- STATE -------- */
+/* -------------------- STATE -------------------- */
 const state = {
   data: null,
   get currentYear(){ return this.data.currentYear || String(new Date().getFullYear()); },
@@ -11,7 +11,7 @@ const state = {
   selectedDate: todayISO()
 };
 
-/* -------- ELEMENTS -------- */
+/* -------------------- ELEMENTS -------------------- */
 const drawer = $("#drawer");
 const hamburgerBtn = $("#hamburgerBtn");
 const closeDrawerBtn = $("#closeDrawerBtn");
@@ -59,9 +59,10 @@ const yearForm = $("#yearForm");
 const yearInput = $("#yearInput");
 const installBtn = $("#installBtn");
 
-/* -------- INIT -------- */
+/* -------------------- INIT -------------------- */
 init();
 function init(){
+  // load/save bootstrap
   const raw = localStorage.getItem("planningData");
   if(raw){ try{ state.data = JSON.parse(raw); } catch{ state.data=null; } }
   if(!state.data){
@@ -73,13 +74,18 @@ function init(){
   }
   ensureYear(state.currentYear);
 
+  // Fill settings UI with saved values (if UI exists)
+  if (themeSelect) themeSelect.value = state.data.settings.theme || "nocturne";
+  if (reminderTimeSettings) reminderTimeSettings.value = state.data.settings.reminderTime || "";
+  if (beepStyleSelect) beepStyleSelect.value = state.data.settings.beepStyle || "classic";
+
   // Drawer
   hamburgerBtn?.addEventListener("click", toggleDrawer);
   closeDrawerBtn?.addEventListener("click", closeDrawer);
   drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
   enableDrawerSwipe(); enableEdgeOpen();
 
-  // Global “close-all overlays” in capture
+  // Global “close-all overlays” in capture (click/touch anywhere)
   ["pointerdown","click"].forEach(ev=>{
     document.addEventListener(ev,(e)=>{
       const t=e.target;
@@ -92,15 +98,13 @@ function init(){
 
   // ESC closes overlays
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllOverlays(); });
-
   // Close view menu on scroll/resize
   ["scroll","resize"].forEach(ev=> window.addEventListener(ev, ()=>{ viewMenu.hidden = true; }, {passive:true}));
 
   // Years
   addYearBtn?.addEventListener("click", ()=>{
-    closeAllOverlays();
     yearInput.value = String(new Date().getFullYear()+1);
-    yearModal.showModal();
+    openDialog(yearModal);
   });
   yearForm?.addEventListener("submit",(e)=>{
     e.preventDefault();
@@ -115,10 +119,8 @@ function init(){
   restoreInput?.addEventListener("change", importBackupJSON);
   exportYearBtn?.addEventListener("click", exportYearICS);
 
-  // Home
-  addItemLargeBtn?.addEventListener("click", ()=>{ closeAllOverlays(); openItemModal({date: state.selectedDate}); });
-
-  // Calendar FAB
+  // Home + FAB
+  addItemLargeBtn?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
   addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
 
   // View menu
@@ -143,20 +145,20 @@ function init(){
 
   // Settings
   openSettingsBtn?.addEventListener("click", ()=>{
-    closeAllOverlays(); settingsModal.showModal();
+    openDialog(settingsModal);
     requestAnimationFrame(()=> saveSettingsBtn?.focus({preventScroll:true}) );
   });
   saveSettingsBtn?.addEventListener("click",(e)=>{
     e.preventDefault();
     state.data.settings.theme = themeSelect?.value || "nocturne";
-    state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
+    state.data.settings.reminderTime = reminderTimeSettings?.value || "";
     state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
     save(); applyTheme(state.data.settings.theme); settingsModal.close();
   });
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // Backdrop click closes all dialogs
+  // Backdrop click closes dialogs
   [itemModal, yearModal, settingsModal].forEach(dlg=>{
     dlg?.addEventListener("click",(e)=>{ if(e.target === dlg) dlg.close("cancel"); });
   });
@@ -176,18 +178,33 @@ function init(){
   render();
 }
 
-/* -------- HELPERS -------- */
+/* -------------------- DIALOG HELPER -------------------- */
+// Ouvre un dialog en fermant tous les autres + overlays
+function openDialog(dlg){
+  [settingsModal, itemModal, yearModal].forEach(m => {
+    if (m && m !== dlg && m.open) m.close();
+  });
+  closeAllOverlays();
+  dlg.showModal();
+  // clic en dehors = fermer (one-time)
+  dlg.addEventListener("click", (e)=>{ if(e.target === dlg) dlg.close("cancel"); }, {once:true});
+}
+
 function closeAllOverlays(){
   viewMenu.hidden = true;
   drawer?.classList.remove("open");
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
-/* -------- DATA -------- */
+/* -------------------- DATA -------------------- */
 function ensureYear(y){ if(!state.data.years[y]) state.data.years[y] = { items:[], lastModified: Date.now() }; }
-function save(){ const y=state.currentYear; if(state.data.years[y]) state.data.years[y].lastModified=Date.now(); localStorage.setItem("planningData", JSON.stringify(state.data)); }
+function save(){
+  const y=state.currentYear;
+  if(state.data.years[y]) state.data.years[y].lastModified=Date.now();
+  localStorage.setItem("planningData", JSON.stringify(state.data));
+}
 
-/* -------- RENDER -------- */
+/* -------------------- RENDER -------------------- */
 function render(){
   renderYearList();
 
@@ -240,7 +257,7 @@ function renderCalendar(){
     else todays.forEach(it=> list.appendChild(itemCard(it)));
     calContent.appendChild(list);
   }else if(state.viewMode==="week"){
-    const grid=document.createElement("div"); grid.className="week-grid";
+    const grid=document.createElement("div"); grid.className="week-grid"; // vertical
     const start=weekStart(d);
     for(let i=0;i<7;i++){
       const day=addDays(start,i);
@@ -281,12 +298,14 @@ function itemCard(it){
       <button class="mini-btn edit">Edit</button>
       <button class="mini-btn danger delete">Delete</button>
     </div>`;
-  a.querySelector(".edit").addEventListener("click", ()=>{ closeAllOverlays(); openItemModal(it); });
+  a.querySelector(".edit").addEventListener("click", ()=>{
+    openItemModal(it);
+  });
   a.querySelector(".delete").addEventListener("click", ()=> deleteItem(it.id));
   return a;
 }
 
-/* -------- GESTURES -------- */
+/* -------------------- GESTURES -------------------- */
 function enableCalendarSwipe(){
   let sx=0, sy=0, dragging=false;
   calContent.addEventListener("touchstart",(e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; },{passive:true});
@@ -312,22 +331,21 @@ function enableEdgeOpen(){
   edgeOpener.addEventListener("touchend",()=>pulling=false);
 }
 
-/* -------- DRAWER -------- */
+/* -------------------- DRAWER -------------------- */
 function toggleDrawer(){ drawer.classList.toggle("open"); hamburgerBtn.setAttribute("aria-expanded", drawer.classList.contains("open")); drawer.setAttribute("aria-hidden", String(!drawer.classList.contains("open"))); }
 function openDrawer(){ drawer.classList.add("open"); hamburgerBtn.setAttribute("aria-expanded","true"); drawer.setAttribute("aria-hidden","false"); }
 function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribute("aria-expanded","false"); drawer.setAttribute("aria-hidden","true"); }
 
-/* -------- CRUD -------- */
+/* -------------------- CRUD -------------------- */
 itemForm.addEventListener("submit", onSaveItem);
 function openItemModal(item={}){
-  closeAllOverlays();
   modalTitle.textContent = item.id ? "Edit slot" : "New slot";
   itemIdInput.value = item.id || "";
   itemTitleInput.value = item.title || "";
   itemDateInput.value = item.date || state.selectedDate;
   itemTimeInput.value = item.time || "";
   itemNotesInput.value = item.notes || "";
-  itemModal.showModal();
+  openDialog(itemModal);
 }
 function onSaveItem(e){
   e.preventDefault();
@@ -347,7 +365,7 @@ function deleteItem(id){
   save(); render();
 }
 
-/* -------- IMPORT/EXPORT/ICS -------- */
+/* -------------------- IMPORT/EXPORT/ICS -------------------- */
 function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}),"planis-backup.json"); }
 function importBackupJSON(e){
   const f=e.target.files[0]; if(!f) return;
@@ -374,7 +392,28 @@ function exportYearICS(){
   download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planis-${y}.ics`);
 }
 
-/* -------- UTILS -------- */
+// Daily reminder ICS (RRULE:DAILY)
+function createDailyReminderICS(){
+  const time = (reminderTimeSettings?.value || "21:00").replace(":", "") + "00";
+  const today = new Date();
+  const dtstart = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}T${time}`;
+  const now = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+  const lines = [
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//EN",
+    "CALSCALE:GREGORIAN","METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:daily-reminder@planis",
+    "DTSTAMP:"+now,
+    "DTSTART;TZID=Europe/Paris:"+dtstart,
+    "RRULE:FREQ=DAILY",
+    "SUMMARY:Planis — Check tomorrow's planning",
+    "BEGIN:VALARM","ACTION:AUDIO","TRIGGER:-PT1M","DESCRIPTION:Planis reminder","END:VALARM",
+    "END:VEVENT","END:VCALENDAR"
+  ];
+  download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),"planis-daily-reminder.ics");
+}
+
+/* -------------------- UTILS -------------------- */
 function uid(){ return cryptoRandom(16); }
 function cryptoRandom(len=16){ const a=new Uint8Array(len); (self.crypto||window.crypto).getRandomValues(a); return Array.from(a).map(b=>b.toString(16).padStart(2,"0")).join(""); }
 function todayISO(){ const d=new Date(); return isoDate(d); }
@@ -395,7 +434,7 @@ function applyTheme(name){
   else if(name==="porcelaine") html.setAttribute("data-theme","porcelaine");
 }
 
-/* -------- Audio -------- */
+/* -------------------- AUDIO -------------------- */
 function playBeep(){
   try{
     const style = beepStyleSelect?.value || state.data.settings.beepStyle || "classic";
@@ -404,6 +443,10 @@ function playBeep(){
     function tone(freq,type="sine",start=0,dur=0.25,gainMax=0.2){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type=type; o.frequency.setValueAtTime(freq,now+start); g.gain.setValueAtTime(0.0001,now+start); g.gain.exponentialRampToValueAtTime(gainMax,now+start+0.01); g.gain.exponentialRampToValueAtTime(0.0001,now+start+dur); o.connect(g).connect(ctx.destination); o.start(now+start); o.stop(now+start+dur+0.02); }
     function sweep(f1,f2,dur=0.4){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type="sine"; o.frequency.setValueAtTime(f1,now); o.frequency.exponentialRampToValueAtTime(f2,now+dur); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.22,now+0.02); g.gain.exponentialRampToValueAtTime(0.0001,now+dur); o.connect(g).connect(ctx.destination); o.start(now); o.stop(now+dur+0.02); }
     function click(){ const buffer=ctx.createBuffer(1,2205,ctx.sampleRate); const data=buffer.getChannelData(0); for(let i=0;i<data.length;i++){ data[i]=(Math.random()*2-1)*Math.exp(-i/200); } const src=ctx.createBufferSource(); src.buffer=buffer; src.connect(ctx.destination); src.start(now); }
-    switch(style){ case "classic": tone(880,"sine",0,0.28,0.22); break; case "chime": tone(880,"sine",0,0.18,0.18); tone(660,"sine",0.16,0.22,0.16); break; case "bell": tone(660,"triangle",0,0.40,0.24); tone(1320,"sine",0,0.25,0.10); break; case "click": click(); break; case "sweep": sweep(500,1400,0.45); break; }
+    switch(style){ case "classic": tone(880,"sine",0,0.28,0.22); break;
+      case "chime": tone(880,"sine",0,0.18,0.18); tone(660,"sine",0.16,0.22,0.16); break;
+      case "bell": tone(660,"triangle",0,0.40,0.24); tone(1320,"sine",0,0.25,0.10); break;
+      case "click": click(); break;
+      case "sweep": sweep(500,1400,0.45); break; }
   }catch(e){ console.warn("Audio not available", e); }
 }
