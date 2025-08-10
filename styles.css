@@ -110,7 +110,7 @@ body{
 .card-notes{margin-top:6px;color:#bfc2ce;white-space:pre-wrap}
 .card-actions{display:flex;gap:8px;margin-top:10px}
 
-/* Modal (centré et avec marge/padding pour éviter tout contact aux bords) */
+/* Modal (centré + marges anti-contact) */
 .modal{border:0;padding:0;background:transparent;z-index:300;position:fixed;inset:0}
 .modal[open]{display:flex;align-items:center;justify-content:center}
 .modal::backdrop{background:rgba(0,0,0,.55)}
@@ -119,11 +119,11 @@ body{
   border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
 
-  /* marges latérales accrues */
-  width:min(520px, calc(100% - 48px));
+  /* largeur limitée + marges latérales confortables */
+  width:min(520px, 92vw);
 
-  /* padding interne plus large */
-  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  /* padding interne plus large pour éviter tout contact aux bords */
+  padding:22px 22px calc(22px + env(safe-area-inset-bottom));
   max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));
 
   margin:auto; color:var(--text); box-shadow:var(--shadow);
@@ -132,10 +132,13 @@ body{
 .modal-card h3{margin:4px 0 12px;font-size:26px}
 .field{display:grid;gap:6px;margin:10px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Champs — clamps iOS (select/time) + aucun débordement */
 .field input,
 .field textarea,
 .modal-card select{
   width:100%;
+  min-width:0;
   max-width:100%;
   background:#14161b;color:var(--text);
   border:1px solid rgba(255,255,255,.14);
@@ -143,12 +146,24 @@ body{
   padding:.75rem 1rem;
   outline:none;
 }
-.field input:focus,.field textarea:focus,.modal-card select:focus{box-shadow:0 0 0 6px var(--ring);border-color:transparent}
-.actions{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:10px;background:linear-gradient(180deg,rgba(27,28,33,0),var(--panel) 50%)}
+input[type="time"], select{
+  -webkit-appearance:none; appearance:none; background-image:none;
+}
+.field input, .modal-card select{
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.field input:focus,.field textarea:focus,.modal-card select:focus{
+  box-shadow:0 0 0 6px var(--ring);border-color:transparent
+}
+.actions{
+  position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;
+  margin-top:16px;padding-top:10px;
+  background:linear-gradient(180deg,rgba(27,28,33,0),var(--panel) 50%)
+}
 
-/* Resp très petits écrans */
+/* Très petits écrans */
 @media (max-width: 360px){
-  .modal-card{ width:calc(100% - 56px); } /* ≈ 28px de marge de chaque côté */
+  .modal-card{ width:calc(100vw - 56px); }
 }
 
 /* Themes */
