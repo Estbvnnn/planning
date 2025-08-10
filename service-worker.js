@@ -1,5 +1,5 @@
 // Planis SW v27 — network-first for HTML/CSS/JS
-const CACHE_NAME = "planis-cache-v27";
+const CACHE_NAME = "planis-cache-v29";
 const ASSETS = [
   "./","./index.html?v=27","./styles.css?v=27","./app.js?v=27",
   "./manifest.webmanifest",
