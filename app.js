@@ -1,4 +1,4 @@
-// Planis v6.3.2 — centered modal + reliable backdrop close
+// Planis v6.3.7 — close-all overlays (drawer/view menu) when opening any modal
 const $  = (q, r=document) => r.querySelector(q);
 const $$ = (q, r=document) => Array.from(r.querySelectorAll(q));
 
@@ -37,7 +37,10 @@ const topTitle = $("#topTitle");
 const viewModeBtn = $("#viewModeBtn");
 const viewMenu = $("#viewMenu");
 
+const homeSection = $("#homeSection");
 const addItemLargeBtn = $("#addItemLargeBtn");
+
+const calendarSection = $("#calendarSection");
 const calLabel = $("#calLabel");
 const calContent = $("#calContent");
 const addItemFab = $("#addItemFab");
@@ -77,8 +80,20 @@ function init(){
   drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
   enableDrawerSwipe(); enableEdgeOpen();
 
+  /* Close overlays on ESC */
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape"){ closeAllOverlays(); }
+  });
+
+  /* Close view menu on any scroll or resize (more robust) */
+  ["scroll","resize"].forEach(ev=> window.addEventListener(ev, ()=>{ viewMenu.hidden = true; }, {passive:true}));
+
   /* Years */
-  addYearBtn?.addEventListener("click", ()=>{ yearInput.value = String(new Date().getFullYear()+1); yearModal.showModal(); });
+  addYearBtn?.addEventListener("click", ()=>{
+    closeAllOverlays();
+    yearInput.value = String(new Date().getFullYear()+1);
+    yearModal.showModal();
+  });
   yearForm?.addEventListener("submit", (e)=>{
     e.preventDefault();
     const y = (yearInput.value||"").trim();
@@ -87,7 +102,7 @@ function init(){
     state.currentYear = y;
     state.selectedDate = `${y}-01-01`;
     state.view = "calendar";
-    yearModal.close(); closeDrawer(); render();
+    yearModal.close(); closeAllOverlays(); render();
   });
 
   /* Tools */
@@ -96,10 +111,16 @@ function init(){
   exportYearBtn?.addEventListener("click", exportYearICS);
 
   /* Home */
-  addItemLargeBtn?.addEventListener("click", ()=>{ closeDrawer(); openItemModal({date: state.selectedDate}); });
+  addItemLargeBtn?.addEventListener("click", ()=>{
+    closeAllOverlays();
+    openItemModal({date: state.selectedDate});
+  });
 
   /* Calendar */
-  addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
+  addItemFab?.addEventListener("click", ()=>{
+    closeAllOverlays();
+    openItemModal({date: state.selectedDate});
+  });
 
   /* View menu */
   viewModeBtn?.addEventListener("click", ()=>{
@@ -121,13 +142,16 @@ function init(){
     render();
   });
   document.addEventListener("click", (e)=>{
-    if(!viewMenu.hidden && !viewMenu.contains(e.target) && e.target !== viewModeBtn) viewMenu.hidden = true;
+    if(!viewMenu.hidden && !viewMenu.contains(e.target) && e.target !== viewModeBtn){
+      viewMenu.hidden = true;
+    }
   });
 
   enableCalendarSwipe();
 
   /* Settings */
   openSettingsBtn?.addEventListener("click", ()=>{
+    closeAllOverlays();
     settingsModal.showModal();
     requestAnimationFrame(()=>{ saveSettingsBtn?.focus({preventScroll:true}); });
   });
@@ -137,13 +161,15 @@ function init(){
     state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
     state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
     save(); applyTheme(state.data.settings.theme); settingsModal.close();
+    closeAllOverlays();
   });
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  /* Backdrop-close fiable pour tous les dialogs */
+  // Backdrop close for all dialogs
   [itemModal, yearModal, settingsModal].forEach(dlg=>{
     dlg?.addEventListener("click",(e)=>{ if(e.target === dlg) dlg.close("cancel"); });
+    dlg?.addEventListener("close", ()=> { viewMenu.hidden = true; }); // safety
   });
 
   /* PWA install */
@@ -155,6 +181,14 @@ function init(){
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
   render();
+}
+
+/* -------- HELPERS TO CLOSE THINGS -------- */
+function closeAllOverlays(){
+  viewMenu.hidden = true;
+  closeDrawer();
+  // blur focus (ferme les menus natifs des <select> sur iOS)
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
 /* -------- DATA -------- */
@@ -174,13 +208,13 @@ function render(){
       state.selectedDate = todayISO();
     }
     const d = new Date(state.selectedDate);
-    $("#topTitle").textContent = `Calendar ${state.currentYear}`;
+    topTitle.textContent = `Calendar ${state.currentYear}`;
     calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})
                       : state.viewMode==="week" ? weekLabel(d)
                       : monthLabel(d);
     viewModeBtn.hidden = false;
   }else{
-    $("#topTitle").textContent = "Home";
+    topTitle.textContent = "Home";
     viewModeBtn.hidden = true; viewMenu.hidden = true;
   }
 
@@ -197,7 +231,7 @@ function renderYearList(){
       state.currentYear = y;
       state.view = "calendar";
       state.selectedDate = (String(new Date().getFullYear())===y) ? todayISO() : `${y}-01-01`;
-      closeDrawer(); render();
+      closeAllOverlays(); render();
     });
     yearList.appendChild(btn);
   });
@@ -220,7 +254,7 @@ function renderCalendar(){
     calContent.appendChild(list);
   }
   else if(state.viewMode==="week"){
-    const grid = document.createElement("div"); grid.className="week-grid";
+    const grid = document.createElement("div"); grid.className="week-grid"; // vertical column
     const start = weekStart(d);
     for(let i=0;i<7;i++){
       const day = addDays(start,i);
@@ -262,7 +296,7 @@ function itemCard(it){
       <button class="mini-btn edit">Edit</button>
       <button class="mini-btn danger delete">Delete</button>
     </div>`;
-  $(".edit",a).addEventListener("click", ()=> openItemModal(it));
+  $(".edit",a).addEventListener("click", ()=> { closeAllOverlays(); openItemModal(it); });
   $(".delete",a).addEventListener("click", ()=> deleteItem(it.id));
   return a;
 }
@@ -301,7 +335,7 @@ function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribu
 /* -------- CRUD -------- */
 itemForm.addEventListener("submit", onSaveItem);
 function openItemModal(item={}){
-  closeDrawer();
+  closeAllOverlays();
   modalTitle.textContent = item.id ? "Edit slot" : "New slot";
   itemIdInput.value = item.id || "";
   itemTitleInput.value = item.title || "";
