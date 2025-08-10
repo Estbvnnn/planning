@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Planning</title>
+  <title>Planis</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Planning">
+  <meta name="apple-mobile-web-app-title" content="Planis">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#121214">
@@ -15,13 +15,13 @@
 </head>
 <body>
 
-  <!-- Edge gesture pour ouvrir le menu -->
+  <!-- zone de geste pour ouvrir le menu -->
   <div id="edgeOpener"></div>
 
   <!-- Drawer -->
   <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu">
     <div class="drawer-header">
-      <h2>Planning</h2>
+      <h2>Planis</h2>
       <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer">✕</button>
     </div>
 
@@ -32,17 +32,20 @@
     </nav>
 
     <nav class="drawer-section">
-      <div class="section-title">OUTILS</div>
-      <button id="backupBtn" class="btn btn--ghost">Exporter sauvegarde (.json)</button>
-      <label class="file-btn btn btn--ghost">
-        <span>Importer sauvegarde (.json)</span>
-        <input type="file" id="restoreInput" accept="application/json" />
-      </label>
+      <div class="section-title">SAUVEGARDE LOCALE</div>
+      <p class="caption">Enregistre/restore tes données sur ton appareil. Rien n’est envoyé en ligne.</p>
+      <div class="stack">
+        <button id="backupBtn" class="btn btn--ghost">Sauvegarder (.json)</button>
+        <label class="btn btn--ghost file-btn" id="restoreLabel">
+          Restaurer (.json)…
+          <input type="file" id="restoreInput" accept="application/json" />
+        </label>
+      </div>
     </nav>
 
     <footer class="drawer-footer">
-      <button id="openSettingsBtn" class="btn btn--outline wide">⚙︎ Paramètres</button>
-      <div class="drawer-footnote">Ultra épuré. Offline. PWA. — v6.1</div>
+      <button id="openSettingsBtn" class="btn btn--outline wide">⚙︎ Réglages</button>
+      <div class="drawer-footnote">Ultra épuré. Offline. PWA. — v6.2</div>
     </footer>
   </aside>
 
@@ -115,7 +118,7 @@
     </form>
   </dialog>
 
-  <!-- Modal Nouvelle année (fiable sur iOS) -->
+  <!-- Modal Nouvelle année -->
   <dialog id="yearModal" class="modal">
     <form method="dialog" class="modal-card" id="yearForm">
       <h3>Nouvelle année</h3>
@@ -130,16 +133,16 @@
     </form>
   </dialog>
 
-  <!-- Paramètres -->
+  <!-- Réglages -->
   <dialog id="settingsModal" class="modal">
     <form method="dialog" class="modal-card" id="settingsForm">
-      <h3>Paramètres</h3>
+      <h3>Réglages</h3>
       <div class="field">
         <label for="themeSelect">Thème</label>
         <select id="themeSelect">
-          <option value="auto">Auto (système)</option>
-          <option value="dark">Sombre</option>
-          <option value="light">Clair</option>
+          <option value="nocturne">Nocturne</option>
+          <option value="ardoise">Ardoise</option>
+          <option value="porcelaine">Porcelaine</option>
         </select>
       </div>
       <div class="field">
@@ -168,7 +171,7 @@
         <button type="button" class="btn btn--outline" id="makeICSFromSettingsBtn">Créer le rappel calendrier (.ics)</button>
       </div>
       <div class="actions">
-        <button class="btn btn--ghost" value="cancel" id="closeSettingsBtn">Fermer</button>
+        <button id="closeSettingsBtn" class="btn btn--ghost" value="cancel">Fermer</button>
         <button class="btn btn--solid" id="saveSettingsBtn" value="default">Enregistrer</button>
       </div>
     </form>

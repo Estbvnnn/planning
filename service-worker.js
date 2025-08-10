@@ -1,4 +1,4 @@
-const CACHE_NAME = "planning-cache-v10"; // <— nouvelle version
+const CACHE_NAME = "planis-cache-v11"; // bump
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",

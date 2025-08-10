@@ -1,8 +1,8 @@
-// v6.1 — fix paramètres, bouton année (modal), vue jour/semaine/mois masquée sur Accueil
+// Planis v6.2 — fix UI + thèmes + gestes + jour=aujourd’hui & backdrop close
 const $  = (q, r=document) => r.querySelector(q);
 const $$ = (q, r=document) => Array.from(r.querySelectorAll(q));
 
-/* ---------- STATE ---------- */
+/* -------- STATE -------- */
 const state = {
   data: null,
   get currentYear(){ return this.data.currentYear || String(new Date().getFullYear()); },
@@ -12,7 +12,7 @@ const state = {
   selectedDate: todayISO()
 };
 
-/* ---------- ELEMENTS ---------- */
+/* -------- ELEMENTS -------- */
 const drawer = $("#drawer");
 const hamburgerBtn = $("#hamburgerBtn");
 const closeDrawerBtn = $("#closeDrawerBtn");
@@ -33,6 +33,7 @@ const beepStyleSelect = $("#beepStyleSelect");
 const testBeepBtn = $("#testBeepBtn");
 const makeICSFromSettingsBtn = $("#makeICSFromSettingsBtn");
 const saveSettingsBtn = $("#saveSettingsBtn");
+const closeSettingsBtn = $("#closeSettingsBtn");
 
 const topTitle = $("#topTitle");
 const viewModeBtn = $("#viewModeBtn");
@@ -59,124 +60,139 @@ const itemNotesInput = $("#itemNotes");
 const yearModal = $("#yearModal");
 const yearForm = $("#yearForm");
 const yearInput = $("#yearInput");
-const yearSaveBtn = $("#yearSaveBtn");
-
 const installBtn = $("#installBtn");
 
-/* ---------- INIT ---------- */
+/* -------- INIT -------- */
 init();
 function init(){
-  try{
-    const raw = localStorage.getItem("planningData");
-    if(raw){ try{ state.data = JSON.parse(raw); } catch{ state.data=null; } }
-    if(!state.data){
-      state.data = {
-        years:{},
-        settings:{ theme:"auto", language:"fr", reminderTime:"21:00", beepStyle:"classic" },
-        currentYear: String(new Date().getFullYear())
-      };
-    }
-    ensureYear(state.currentYear);
-    if(state.selectedDate.slice(0,4) !== state.currentYear){
-      state.selectedDate = `${state.currentYear}-01-01`;
-    }
-
-    /* Drawer + gestures */
-    hamburgerBtn?.addEventListener("click", toggleDrawer);
-    closeDrawerBtn?.addEventListener("click", closeDrawer);
-    drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
-    enableDrawerSwipe();
-    enableEdgeOpen();
-
-    /* Years */
-    addYearBtn?.addEventListener("click", ()=>{ yearInput.value = String(new Date().getFullYear()+1); yearModal.showModal(); });
-    yearForm?.addEventListener("submit", (e)=>{
-      e.preventDefault();
-      const y = (yearInput.value||"").trim();
-      if(!/^[0-9]{4}$/.test(y)){ alert("Année invalide"); return; }
-      ensureYear(y); state.currentYear = y; state.selectedDate = `${y}-01-01`; state.view = "calendar";
-      yearModal.close(); closeDrawer(); render();
-    });
-
-    /* Tools */
-    backupBtn?.addEventListener("click", exportBackupJSON);
-    restoreInput?.addEventListener("change", importBackupJSON);
-    exportYearBtn?.addEventListener("click", exportYearICS);
-
-    /* Home */
-    addItemLargeBtn?.addEventListener("click", ()=>{ closeDrawer(); openItemModal({date: state.selectedDate}); });
-
-    /* Calendar */
-    addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
-
-    /* View menu */
-    viewModeBtn?.addEventListener("click", ()=>{
-      const open = viewMenu.hidden;
-      viewMenu.hidden = !open;
-      viewModeBtn.setAttribute("aria-expanded", String(open));
-    });
-    viewMenu?.addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-view]");
-      if(!btn) return;
-      state.viewMode = btn.dataset.view;
-      viewModeBtn.textContent = state.viewMode==="day" ? "Jour ▾" : state.viewMode==="week" ? "Semaine ▾" : "Mois ▾";
-      viewMenu.hidden = true;
-      render();
-    });
-    document.addEventListener("click", (e)=>{
-      if(!viewMenu.hidden && !viewMenu.contains(e.target) && e.target !== viewModeBtn) viewMenu.hidden = true;
-    });
-
-    enableCalendarSwipe();
-
-    /* Settings */
-    openSettingsBtn?.addEventListener("click", ()=> settingsModal.showModal());
-    saveSettingsBtn?.addEventListener("click", (e)=>{
-      e.preventDefault();
-      state.data.settings.theme = themeSelect?.value || "auto";
-      state.data.settings.language = langSelect?.value || "fr";
-      state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
-      state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
-      save(); applyTheme(state.data.settings.theme); settingsModal.close();
-    });
-    testBeepBtn?.addEventListener("click", playBeep);
-    makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
-
-    /* Install PWA */
-    let deferredInstallPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt = e; installBtn.hidden=false; });
-    installBtn?.addEventListener("click", async ()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; installBtn.hidden=true; });
-
-    /* Defaults */
-    applyTheme(state.data.settings.theme || "auto");
-    themeSelect && (themeSelect.value = state.data.settings.theme || "auto");
-    langSelect && (langSelect.value = state.data.settings.language || "fr");
-    reminderTimeSettings && (reminderTimeSettings.value = state.data.settings.reminderTime || "21:00");
-    beepStyleSelect && (beepStyleSelect.value = state.data.settings.beepStyle || "classic");
-
-    if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
-
-    render();
-  }catch(err){
-    console.error(err);
+  const raw = localStorage.getItem("planningData");
+  if(raw){ try{ state.data = JSON.parse(raw); } catch{ state.data=null; } }
+  if(!state.data){
+    state.data = {
+      years:{},
+      settings:{ theme:"nocturne", language:"fr", reminderTime:"21:00", beepStyle:"classic" },
+      currentYear: String(new Date().getFullYear())
+    };
   }
+  ensureYear(state.currentYear);
+
+  /* Drawer + gestures */
+  hamburgerBtn?.addEventListener("click", toggleDrawer);
+  closeDrawerBtn?.addEventListener("click", closeDrawer);
+  drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
+  enableDrawerSwipe(); enableEdgeOpen();
+
+  /* Years */
+  addYearBtn?.addEventListener("click", ()=>{ yearInput.value = String(new Date().getFullYear()+1); yearModal.showModal(); });
+  yearForm?.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const y = (yearInput.value||"").trim();
+    if(!/^[0-9]{4}$/.test(y)){ alert("Année invalide"); return; }
+    ensureYear(y);
+    state.currentYear = y;
+    state.selectedDate = `${y}-01-01`;
+    state.view = "calendar";
+    yearModal.close(); closeDrawer(); render();
+  });
+
+  /* Tools */
+  backupBtn?.addEventListener("click", exportBackupJSON);
+  restoreInput?.addEventListener("change", importBackupJSON);
+  exportYearBtn?.addEventListener("click", exportYearICS);
+
+  /* Home */
+  addItemLargeBtn?.addEventListener("click", ()=>{ closeDrawer(); openItemModal({date: state.selectedDate}); });
+
+  /* Calendar */
+  addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
+
+  /* View menu */
+  viewModeBtn?.addEventListener("click", ()=>{
+    if(state.view !== "calendar") return; // jamais sur l’accueil
+    const open = viewMenu.hidden;
+    viewMenu.hidden = !open;
+    viewModeBtn.setAttribute("aria-expanded", String(open));
+  });
+  viewMenu?.addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-view]");
+    if(!btn) return;
+    state.viewMode = btn.dataset.view;
+    if(state.viewMode==="day"){
+      // si même année -> on cale sur aujourd’hui
+      const y = new Date().getFullYear();
+      state.selectedDate = (String(y)===state.currentYear) ? todayISO() : `${state.currentYear}-01-01`;
+    }
+    viewModeBtn.textContent = state.viewMode==="day" ? "Jour ▾" : state.viewMode==="week" ? "Semaine ▾" : "Mois ▾";
+    viewMenu.hidden = true;
+    render();
+  });
+  document.addEventListener("click", (e)=>{
+    if(!viewMenu.hidden && !viewMenu.contains(e.target) && e.target !== viewModeBtn) viewMenu.hidden = true;
+  });
+
+  enableCalendarSwipe();
+
+  /* Réglages */
+  openSettingsBtn?.addEventListener("click", ()=>{
+    settingsModal.showModal();
+    // évite l’ouverture auto du select sur iOS
+    requestAnimationFrame(()=>{ closeSettingsBtn?.focus({preventScroll:true}); });
+  });
+  saveSettingsBtn?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    state.data.settings.theme = themeSelect?.value || "nocturne";
+    state.data.settings.language = langSelect?.value || "fr";
+    state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
+    state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
+    save(); applyTheme(state.data.settings.theme); settingsModal.close();
+  });
+  testBeepBtn?.addEventListener("click", playBeep);
+  makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
+
+  // fermer les dialogs au tap sur le backdrop
+  [itemModal, yearModal, settingsModal].forEach(dlg=>{
+    dlg?.addEventListener("click", (e)=>{
+      const card = dlg.querySelector(".modal-card");
+      const r = card.getBoundingClientRect();
+      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){
+        dlg.close("cancel");
+      }
+    });
+  });
+
+  /* PWA install */
+  let deferredInstallPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt = e; installBtn.hidden=false; });
+  installBtn?.addEventListener("click", async ()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; installBtn.hidden=true; });
+
+  /* defaults */
+  applyTheme(state.data.settings.theme || "nocturne");
+  themeSelect && (themeSelect.value = state.data.settings.theme || "nocturne");
+  langSelect && (langSelect.value = state.data.settings.language || "fr");
+  reminderTimeSettings && (reminderTimeSettings.value = state.data.settings.reminderTime || "");
+
+  if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
+
+  render();
 }
 
-/* ---------- DATA ---------- */
+/* -------- DATA -------- */
 function ensureYear(y){ if(!state.data.years[y]) state.data.years[y] = { items:[], lastModified: Date.now() }; }
 function save(){ const y=state.currentYear; if(state.data.years[y]) state.data.years[y].lastModified=Date.now(); localStorage.setItem("planningData", JSON.stringify(state.data)); }
 
-/* ---------- RENDER ---------- */
+/* -------- RENDER -------- */
 function render(){
   renderYearList();
 
-  // sections
   const onCalendar = (state.view === "calendar");
   homeSection.hidden     =  onCalendar;
   calendarSection.hidden = !onCalendar;
 
-  // topbar
   if(onCalendar){
+    // si vue "Jour", force aujourd’hui quand on arrive sur le calendrier de l’année courante
+    if(state.viewMode==="day" && state.currentYear === String(new Date().getFullYear())){
+      state.selectedDate = todayISO();
+    }
     const d = new Date(state.selectedDate);
     topTitle.textContent = `Calendrier ${state.currentYear}`;
     calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString(locale(),{day:"2-digit",month:"long",year:"numeric"})
@@ -185,8 +201,7 @@ function render(){
     viewModeBtn.hidden = false;
   }else{
     topTitle.textContent = "Accueil";
-    viewModeBtn.hidden = true;
-    viewMenu.hidden = true; // <— s’assure que le menu n’apparaît pas sur l’accueil
+    viewModeBtn.hidden = true; viewMenu.hidden = true;
   }
 
   if(onCalendar) renderCalendar();
@@ -200,10 +215,10 @@ function renderYearList(){
     btn.textContent = `Calendrier ${y}` + (y===state.currentYear ? " •" : "");
     btn.addEventListener("click", ()=>{
       state.currentYear = y;
-      if(state.selectedDate.slice(0,4)!==y) state.selectedDate = `${y}-01-01`;
       state.view = "calendar";
-      closeDrawer();
-      render();
+      // Jour = aujourd’hui si même année, sinon 1er janvier
+      state.selectedDate = (String(new Date().getFullYear())===y) ? todayISO() : `${y}-01-01`;
+      closeDrawer(); render();
     });
     yearList.appendChild(btn);
   });
@@ -273,7 +288,7 @@ function itemCard(it){
   return a;
 }
 
-/* ---------- GESTURES ---------- */
+/* -------- GESTURES -------- */
 function enableCalendarSwipe(){
   let sx=0, sy=0, dragging=false;
   calContent.addEventListener("touchstart", (e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; }, {passive:true});
@@ -299,12 +314,12 @@ function enableEdgeOpen(){
   edgeOpener.addEventListener("touchend",()=>pulling=false);
 }
 
-/* ---------- DRAWER ---------- */
+/* -------- DRAWER -------- */
 function toggleDrawer(){ drawer.classList.toggle("open"); hamburgerBtn.setAttribute("aria-expanded", drawer.classList.contains("open")); drawer.setAttribute("aria-hidden", String(!drawer.classList.contains("open"))); }
 function openDrawer(){ drawer.classList.add("open"); hamburgerBtn.setAttribute("aria-expanded","true"); drawer.setAttribute("aria-hidden","false"); }
 function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribute("aria-expanded","false"); drawer.setAttribute("aria-hidden","true"); }
 
-/* ---------- CRUD ---------- */
+/* -------- CRUD -------- */
 itemForm.addEventListener("submit", onSaveItem);
 function openItemModal(item={}){
   closeDrawer();
@@ -334,8 +349,8 @@ function deleteItem(id){
   save(); render();
 }
 
-/* ---------- IMPORT/EXPORT/ICS ---------- */
-function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}),"planning-backup.json"); }
+/* -------- IMPORT/EXPORT/ICS -------- */
+function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}),"planis-backup.json"); }
 function importBackupJSON(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
@@ -347,21 +362,21 @@ function exportYearICS(){
   const items = [...state.data.years[y].items].sort(sortByDateTime);
   if(items.length===0){ alert("Aucun slot dans "+y); return; }
   const now = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
-  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planning PWA//","CALSCALE:GREGORIAN","METHOD:PUBLISH",
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//","CALSCALE:GREGORIAN","METHOD:PUBLISH",
     "BEGIN:VTIMEZONE","TZID:Europe/Paris","X-LIC-LOCATION:Europe/Paris",
     "BEGIN:DAYLIGHT","TZOFFSETFROM:+0100","TZOFFSETTO:+0200","TZNAME:CEST","DTSTART:19700329T020000","RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU","END:DAYLIGHT",
     "BEGIN:STANDARD","TZOFFSETFROM:+0200","TZOFFSETTO:+0100","TZNAME:CET","DTSTART:19701025T030000","RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU","END:STANDARD","END:VTIMEZONE"];
   for(const it of items){
     const dt = `${it.date.replace(/-/g,"")}T${(it.time||"09:00").replace(":","")}00`;
-    lines.push("BEGIN:VEVENT","UID:"+it.id+"@planning","DTSTAMP:"+now,"DTSTART;TZID=Europe/Paris:"+dt,"SUMMARY:"+icsEscape(it.title));
+    lines.push("BEGIN:VEVENT","UID:"+it.id+"@planis","DTSTAMP:"+now,"DTSTART;TZID=Europe/Paris:"+dt,"SUMMARY:"+icsEscape(it.title));
     if(it.notes) lines.push("DESCRIPTION:"+icsEscape(it.notes));
     lines.push("END:VEVENT");
   }
   lines.push("END:VCALENDAR");
-  download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planning-${y}.ics`);
+  download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planis-${y}.ics`);
 }
 
-/* ---------- UTILS ---------- */
+/* -------- UTILS -------- */
 function uid(){ return cryptoRandom(16); }
 function cryptoRandom(len=16){ const a=new Uint8Array(len); (self.crypto||window.crypto).getRandomValues(a); return Array.from(a).map(b=>b.toString(16).padStart(2,"0")).join(""); }
 function todayISO(){ const d=new Date(); return isoDate(d); }
@@ -375,10 +390,16 @@ function weekLabel(d){ const start=weekStart(d), end=addDays(start,6); const loc
 function monthLabel(d){ return d.toLocaleDateString(locale(),{month:"long",year:"numeric"}); }
 function icsEscape(s){ return (s||"").replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,|;/g, m=>m===","?"\\,":"\\;"); }
 function download(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },0); }
-function applyTheme(mode){ const html=document.documentElement; if(mode==="dark") html.setAttribute("data-theme","dark"); else if(mode==="light") html.setAttribute("data-theme","light"); else html.removeAttribute("data-theme"); }
+function applyTheme(name){
+  const html=document.documentElement;
+  html.removeAttribute("data-theme");
+  if(name==="ardoise") html.setAttribute("data-theme","ardoise");
+  else if(name==="porcelaine") html.setAttribute("data-theme","porcelaine");
+  else html.setAttribute("data-theme",""); // nocturne par défaut
+}
 function locale(){ return (langSelect?.value==="en") ? "en-US" : "fr-FR"; }
 
-/* ---------- AUDIO ---------- */
+/* -------- AUDIO -------- */
 function playBeep(){
   try{
     const style = beepStyleSelect?.value || state.data.settings.beepStyle || "classic";
