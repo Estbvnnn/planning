@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Planning</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Planning">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#121214">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Drawer -->
+  <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu latéral">
+    <div class="drawer-header">
+      <h2>Planning</h2>
+      <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer le menu">✕</button>
+    </div>
+    <nav class="drawer-section">
+      <div class="section-title">Années</div>
+      <ul id="yearList" class="year-list"></ul>
+      <button id="addYearBtn" class="ghost-btn">+ Ajouter une année</button>
+    </nav>
+    <nav class="drawer-section">
+      <div class="section-title">Outils</div>
+      <button id="exportYearBtn" class="ghost-btn">Exporter l’année (.ics)</button>
+      <button id="backupBtn" class="ghost-btn">Exporter sauvegarde (.json)</button>
+      <label class="file-btn">
+        Importer sauvegarde (.json)
+        <input type="file" id="restoreInput" accept="application/json" />
+      </label>
+    </nav>
+    <footer class="drawer-footer">
+      <button id="openSettingsBtn" class="ghost-btn small">⚙︎ Paramètres</button>
+      <div style="height:8px"></div>
+      <small>Ultra épuré. Offline. PWA.</small>
+    </footer>
+  </aside>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button id="hamburgerBtn" class="hamburger" aria-label="Ouvrir le menu" aria-controls="drawer" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="top-title" id="currentYearLabel">—</div>
+    <button id="installBtn" class="install-btn" hidden>Installer</button>
+  </header>
+
+  <!-- Content -->
+  <main id="content">
+    <section id="emptyState" class="empty-state">
+      <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter un élément">+</button>
+      <p class="muted">Touchez “+” pour ajouter votre premier élément.</p>
+    </section>
+
+    <section id="itemsSection" class="items-section" hidden>
+      <div class="list-header">
+        <h1 class="year-heading" id="yearHeading">—</h1>
+        <button id="addItemFab" class="fab" aria-label="Ajouter">+</button>
+      </div>
+      <div id="itemsList" class="items-list"></div>
+    </section>
+  </main>
+
+  <!-- Add/Edit modal -->
+  <dialog id="itemModal" class="modal">
+    <form method="dialog" class="modal-card" id="itemForm">
+      <h3 id="modalTitle">Nouvel élément</h3>
+      <input type="hidden" id="itemId" />
+      <div class="field">
+        <label for="itemTitle">Titre</label>
+        <input id="itemTitle" required maxlength="120" placeholder="Ex. Rendez-vous" />
+      </div>
+      <div class="field">
+        <label for="itemDate">Date</label>
+        <input id="itemDate" type="date" required />
+      </div>
+      <div class="field">
+        <label for="itemTime">Heure (optionnel)</label>
+        <input id="itemTime" type="time" />
+      </div>
+      <div class="field">
+        <label for="itemNotes">Notes</label>
+        <textarea id="itemNotes" rows="3" placeholder="Détails (optionnel)"></textarea>
+      </div>
+      <div class="actions">
+        <button class="ghost-btn" value="cancel">Annuler</button>
+        <button class="primary-btn" id="saveItemBtn" value="default">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="itemTemplate">
+    <article class="card">
+      <div class="card-row">
+        <div class="card-title"></div>
+        <div class="card-date"></div>
+      </div>
+      <div class="card-notes"></div>
+      <div class="card-actions">
+        <button class="mini-btn edit">Modifier</button>
+        <button class="mini-btn danger delete">Supprimer</button>
+      </div>
+    </article>
+  </template>
+
+  <!-- Settings modal -->
+  <dialog id="settingsModal" class="modal">
+    <form method="dialog" class="modal-card" id="settingsForm">
+      <h3 id="settingsTitle">Paramètres</h3>
+
+      <div class="field">
+        <label for="themeSelect">Thème</label>
+        <select id="themeSelect">
+          <option value="auto">Auto (système)</option>
+          <option value="dark">Sombre</option>
+          <option value="light">Clair</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="langSelect">Langue</label>
+        <select id="langSelect">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="reminderTimeSettings">Rappel quotidien (heure)</label>
+        <input id="reminderTimeSettings" type="time" />
+        <label class="switch-row">
+          <input id="soundEnabled" type="checkbox" />
+          <span>Activer le bip (via Calendrier)</span>
+        </label>
+        <div class="hint">Le son dépend des réglages de l’app Calendrier iOS.</div>
+      </div>
+
+      <div class="field">
+        <button type="button" class="ghost-btn" id="testBeepBtn">Tester le bip</button>
+        <button type="button" class="ghost-btn" id="makeICSFromSettingsBtn">Créer le rappel calendrier (.ics)</button>
+      </div>
+
+      <div class="actions">
+        <button class="ghost-btn" value="cancel" id="closeSettingsBtn">Fermer</button>
+        <button class="primary-btn" id="saveSettingsBtn" value="default">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
