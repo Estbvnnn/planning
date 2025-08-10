@@ -1,5 +1,5 @@
-// Offline-first cache
-const CACHE_NAME = "planning-cache-v7"; // change le numéro
+// Offline-first cache (bump version pour forcer la maj)
+const CACHE_NAME = "planning-cache-v8";
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",
