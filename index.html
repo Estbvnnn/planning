@@ -40,7 +40,7 @@
     <!-- collé en bas -->
     <footer class="drawer-footer">
       <button id="openSettingsBtn" class="ghost-btn wide" data-i18n="settings">⚙︎ Paramètres</button>
-      <div class="drawer-footnote">Ultra épuré. Offline. PWA.</div>
+      <div id="footnote" class="drawer-footnote">Ultra épuré. Offline. PWA. — v4</div>
     </footer>
   </aside>
 
@@ -57,7 +57,7 @@
   <main id="content">
     <section id="emptyState" class="empty-state">
       <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter">+</button>
-      <p class="muted" id="emptyHint" data-i18n="tapPlus">Touchez “+” pour ajouter votre première entrée.</p>
+      <p class="muted" id="emptyHint" data-i18n="tapPlus">Touchez “+” pour ajouter votre premier slot.</p>
     </section>
 
     <section id="itemsSection" class="items-section" hidden>
@@ -72,7 +72,7 @@
   <!-- Add/Edit modal -->
   <dialog id="itemModal" class="modal">
     <form method="dialog" class="modal-card" id="itemForm">
-      <h3 id="modalTitle" data-i18n="newItem">Nouvelle entrée</h3>
+      <h3 id="modalTitle" data-i18n="newItem">Nouveau slot</h3>
       <input type="hidden" id="itemId" />
       <div class="field">
         <label for="itemTitle" data-i18n="title">Titre</label>

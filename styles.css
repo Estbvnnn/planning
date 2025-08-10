@@ -1,4 +1,3 @@
-/* Ultra simple, ultra épuré */
 :root{
   --bg:#121214;
   --panel:#1c1d22;
@@ -33,7 +32,7 @@ body{
 .top-title{ font-weight:600; opacity:.9; letter-spacing:.5px }
 .install-btn{ margin-left:auto; border:1px solid rgba(255,255,255,.12); background:none; color:var(--text); padding:.45rem .7rem; border-radius:10px; font-weight:600 }
 
-/* Drawer */
+/* Drawer (au-dessus du contenu et du FAB) */
 .drawer{
   position:fixed; inset:0; width: 84%; max-width: 360px;
   transform: translateX(-120%);
@@ -42,7 +41,7 @@ body{
   box-shadow: var(--shadow);
   padding-top: env(safe-area-inset-top);
   display:flex; flex-direction:column;
-  z-index:200; /* au-dessus du contenu et du FAB */
+  z-index:200;
 }
 .drawer.open{ transform: translateX(0); }
 .drawer-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 16px 8px 16px; border-bottom:1px solid rgba(255,255,255,.06)}
@@ -124,28 +123,16 @@ html[data-theme="light"]{
 }
 @media (prefers-color-scheme: light){
   html:not([data-theme="dark"]){
-    --bg:#f7f7fb;
-    --panel:#ffffff;
-    --muted:#6b7280;
-    --text:#0f172a;
-    --accent:#6d5cff;
-    --accent-2:#3a82f6;
-    --danger:#b91c1c;
-    --card:#ffffff;
-    --ring:rgba(58,130,246,.25);
-    --shadow: 0 8px 24px rgba(2,6,23,.10);
+    --bg:#f7f7fb; --panel:#ffffff; --muted:#6b7280; --text:#0f172a;
+    --accent:#6d5cff; --accent-2:#3a82f6; --danger:#b91c1c; --card:#ffffff;
+    --ring:rgba(58,130,246,.25); --shadow: 0 8px 24px rgba(2,6,23,.10);
   }
 }
-html[data-theme="light"] .topbar{
-  background: rgba(255,255,255,.7);
-  border-bottom: 1px solid #e5e7eb;
-}
+html[data-theme="light"] .topbar{ background: rgba(255,255,255,.7); border-bottom: 1px solid #e5e7eb; }
 html[data-theme="light"] .drawer-section{ border-bottom:1px solid #eef0f4 }
 html[data-theme="light"] .card{ border-color:#e5e7eb }
 html[data-theme="light"] .field input,
 html[data-theme="light"] .field textarea,
-html[data-theme="light"] .modal-card select{
-  background:#fff; border-color:#e5e7eb; color:#0f172a;
-}
+html[data-theme="light"] .modal-card select{ background:#fff; border-color:#e5e7eb; color:#0f172a; }
+
 .switch-row{ display:flex; align-items:center; gap:.6rem; margin-top:.5rem }
-.drawer-footer .small{ width:100%; text-align:center }
