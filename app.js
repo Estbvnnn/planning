@@ -1,4 +1,4 @@
-// Planis v6.2 — fix UI + thèmes + gestes + jour=aujourd’hui & backdrop close
+// Planis v6.3 — English UI, backdrop-close modals, vertical week, logo in drawer
 const $  = (q, r=document) => r.querySelector(q);
 const $$ = (q, r=document) => Array.from(r.querySelectorAll(q));
 
@@ -27,13 +27,11 @@ const restoreInput = $("#restoreInput");
 const openSettingsBtn = $("#openSettingsBtn");
 const settingsModal = $("#settingsModal");
 const themeSelect = $("#themeSelect");
-const langSelect = $("#langSelect");
 const reminderTimeSettings = $("#reminderTimeSettings");
 const beepStyleSelect = $("#beepStyleSelect");
 const testBeepBtn = $("#testBeepBtn");
 const makeICSFromSettingsBtn = $("#makeICSFromSettingsBtn");
 const saveSettingsBtn = $("#saveSettingsBtn");
-const closeSettingsBtn = $("#closeSettingsBtn");
 
 const topTitle = $("#topTitle");
 const viewModeBtn = $("#viewModeBtn");
@@ -70,7 +68,7 @@ function init(){
   if(!state.data){
     state.data = {
       years:{},
-      settings:{ theme:"nocturne", language:"fr", reminderTime:"21:00", beepStyle:"classic" },
+      settings:{ theme:"nocturne", reminderTime:"21:00", beepStyle:"classic" },
       currentYear: String(new Date().getFullYear())
     };
   }
@@ -87,7 +85,7 @@ function init(){
   yearForm?.addEventListener("submit", (e)=>{
     e.preventDefault();
     const y = (yearInput.value||"").trim();
-    if(!/^[0-9]{4}$/.test(y)){ alert("Année invalide"); return; }
+    if(!/^[0-9]{4}$/.test(y)){ alert("Invalid year"); return; }
     ensureYear(y);
     state.currentYear = y;
     state.selectedDate = `${y}-01-01`;
@@ -108,7 +106,7 @@ function init(){
 
   /* View menu */
   viewModeBtn?.addEventListener("click", ()=>{
-    if(state.view !== "calendar") return; // jamais sur l’accueil
+    if(state.view !== "calendar") return;
     const open = viewMenu.hidden;
     viewMenu.hidden = !open;
     viewModeBtn.setAttribute("aria-expanded", String(open));
@@ -118,11 +116,10 @@ function init(){
     if(!btn) return;
     state.viewMode = btn.dataset.view;
     if(state.viewMode==="day"){
-      // si même année -> on cale sur aujourd’hui
       const y = new Date().getFullYear();
       state.selectedDate = (String(y)===state.currentYear) ? todayISO() : `${state.currentYear}-01-01`;
     }
-    viewModeBtn.textContent = state.viewMode==="day" ? "Jour ▾" : state.viewMode==="week" ? "Semaine ▾" : "Mois ▾";
+    viewModeBtn.textContent = state.viewMode==="day" ? "Day ▾" : state.viewMode==="week" ? "Week ▾" : "Month ▾";
     viewMenu.hidden = true;
     render();
   });
@@ -132,16 +129,14 @@ function init(){
 
   enableCalendarSwipe();
 
-  /* Réglages */
+  /* Settings */
   openSettingsBtn?.addEventListener("click", ()=>{
     settingsModal.showModal();
-    // évite l’ouverture auto du select sur iOS
-    requestAnimationFrame(()=>{ closeSettingsBtn?.focus({preventScroll:true}); });
+    requestAnimationFrame(()=>{ saveSettingsBtn?.focus({preventScroll:true}); });
   });
   saveSettingsBtn?.addEventListener("click", (e)=>{
     e.preventDefault();
     state.data.settings.theme = themeSelect?.value || "nocturne";
-    state.data.settings.language = langSelect?.value || "fr";
     state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
     state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
     save(); applyTheme(state.data.settings.theme); settingsModal.close();
@@ -149,14 +144,13 @@ function init(){
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // fermer les dialogs au tap sur le backdrop
+  // Backdrop-close for all dialogs
   [itemModal, yearModal, settingsModal].forEach(dlg=>{
-    dlg?.addEventListener("click", (e)=>{
+    dlg?.addEventListener("pointerdown",(e)=>{
       const card = dlg.querySelector(".modal-card");
-      const r = card.getBoundingClientRect();
-      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom){
-        dlg.close("cancel");
-      }
+      if(!card) return;
+      const inside = e.composedPath().includes(card);
+      if(!inside) dlg.close("cancel");
     });
   });
 
@@ -167,9 +161,6 @@ function init(){
 
   /* defaults */
   applyTheme(state.data.settings.theme || "nocturne");
-  themeSelect && (themeSelect.value = state.data.settings.theme || "nocturne");
-  langSelect && (langSelect.value = state.data.settings.language || "fr");
-  reminderTimeSettings && (reminderTimeSettings.value = state.data.settings.reminderTime || "");
 
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
@@ -185,22 +176,21 @@ function render(){
   renderYearList();
 
   const onCalendar = (state.view === "calendar");
-  homeSection.hidden     =  onCalendar;
-  calendarSection.hidden = !onCalendar;
+  $("#homeSection").hidden     =  onCalendar;
+  $("#calendarSection").hidden = !onCalendar;
 
   if(onCalendar){
-    // si vue "Jour", force aujourd’hui quand on arrive sur le calendrier de l’année courante
     if(state.viewMode==="day" && state.currentYear === String(new Date().getFullYear())){
       state.selectedDate = todayISO();
     }
     const d = new Date(state.selectedDate);
-    topTitle.textContent = `Calendrier ${state.currentYear}`;
-    calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString(locale(),{day:"2-digit",month:"long",year:"numeric"})
+    topTitle.textContent = `Calendar ${state.currentYear}`;
+    calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})
                       : state.viewMode==="week" ? weekLabel(d)
                       : monthLabel(d);
     viewModeBtn.hidden = false;
   }else{
-    topTitle.textContent = "Accueil";
+    topTitle.textContent = "Home";
     viewModeBtn.hidden = true; viewMenu.hidden = true;
   }
 
@@ -212,11 +202,10 @@ function renderYearList(){
   Object.keys(state.data.years).sort().forEach(y=>{
     const btn = document.createElement("button");
     btn.className = "btn btn--ghost";
-    btn.textContent = `Calendrier ${y}` + (y===state.currentYear ? " •" : "");
+    btn.textContent = `Calendar ${y}` + (y===state.currentYear ? " •" : "");
     btn.addEventListener("click", ()=>{
       state.currentYear = y;
       state.view = "calendar";
-      // Jour = aujourd’hui si même année, sinon 1er janvier
       state.selectedDate = (String(new Date().getFullYear())===y) ? todayISO() : `${y}-01-01`;
       closeDrawer(); render();
     });
@@ -234,19 +223,19 @@ function renderCalendar(){
     list.className = "day-list";
     const todays = items.filter(it => it.date === isoDate(d)).sort(sortByDateTime);
     if(todays.length===0){
-      const p=document.createElement("p"); p.className="muted"; p.textContent = locale()=="en-US"?"No entry for this day.":"Aucun slot ce jour."; list.appendChild(p);
+      const p=document.createElement("p"); p.className="muted"; p.textContent = "—"; list.appendChild(p);
     }else{
       todays.forEach(it=> list.appendChild(itemCard(it)));
     }
     calContent.appendChild(list);
   }
   else if(state.viewMode==="week"){
-    const grid = document.createElement("div"); grid.className="week-grid";
+    const grid = document.createElement("div"); grid.className="week-grid"; // 1 column (vertical)
     const start = weekStart(d);
     for(let i=0;i<7;i++){
       const day = addDays(start,i);
       const col = document.createElement("div"); col.className="week-col";
-      const h4 = document.createElement("h4"); h4.textContent = day.toLocaleDateString(locale(),{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
+      const h4 = document.createElement("h4"); h4.textContent = day.toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
       const dayItems = items.filter(it=>it.date===isoDate(day)).sort(sortByDateTime);
       if(dayItems.length===0){ const p=document.createElement("p"); p.className="muted"; p.textContent="—"; col.appendChild(p); }
       else dayItems.forEach(it=> col.appendChild(itemCard(it)));
@@ -265,7 +254,7 @@ function renderCalendar(){
       const head = document.createElement("div"); head.className="d"; head.textContent = day.getDate(); cell.appendChild(head);
       const dayItems = items.filter(it=>it.date===isoDate(day));
       if(dayItems.length){ const dots=document.createElement("div"); dayItems.slice(0,5).forEach(()=>{const dot=document.createElement("span"); dot.className="dot"; dots.appendChild(dot);}); cell.appendChild(dots); }
-      cell.addEventListener("click", ()=>{ state.viewMode="day"; state.selectedDate=isoDate(day); viewModeBtn.textContent="Jour ▾"; render(); });
+      cell.addEventListener("click", ()=>{ state.viewMode="day"; state.selectedDate=isoDate(day); viewModeBtn.textContent="Day ▾"; render(); });
       grid.appendChild(cell);
     }
     calContent.appendChild(grid);
@@ -280,8 +269,8 @@ function itemCard(it){
     </div>
     ${it.notes?`<div class="card-notes">${escapeHTML(it.notes)}</div>`:""}
     <div class="card-actions">
-      <button class="mini-btn edit">Modifier</button>
-      <button class="mini-btn danger delete">Supprimer</button>
+      <button class="mini-btn edit">Edit</button>
+      <button class="mini-btn danger delete">Delete</button>
     </div>`;
   $(".edit",a).addEventListener("click", ()=> openItemModal(it));
   $(".delete",a).addEventListener("click", ()=> deleteItem(it.id));
@@ -323,7 +312,7 @@ function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribu
 itemForm.addEventListener("submit", onSaveItem);
 function openItemModal(item={}){
   closeDrawer();
-  modalTitle.textContent = item.id ? "Modifier le slot" : "Nouveau slot";
+  modalTitle.textContent = item.id ? "Edit slot" : "New slot";
   itemIdInput.value = item.id || "";
   itemTitleInput.value = item.title || "";
   itemDateInput.value = item.date || state.selectedDate;
@@ -334,15 +323,15 @@ function openItemModal(item={}){
 function onSaveItem(e){
   e.preventDefault();
   const id = itemIdInput.value || uid();
-  const payload = { id, title:(itemTitleInput.value||"").trim(), date:itemDateInput.value, time:itemTimeInput.value||"", notes:(itemNotesInput.value||"").trim(), createdAt: Date.now() };
-  if(!payload.title || !payload.date) return;
+  const payload = { id, title:(itemTitleInput.value||"").trim(), date:itemDateInput.value || todayISO(), time:itemTimeInput.value||"", notes:(itemNotesInput.value||"").trim(), createdAt: Date.now() };
+  if(!payload.title){ alert("Please add a title (or tap outside to close)."); return; }
   const list = state.data.years[state.currentYear].items;
   const idx = list.findIndex(x=>x.id===id);
   if(idx>=0){ payload.createdAt=list[idx].createdAt; list[idx]=payload; } else list.push(payload);
   save(); itemModal.close(); state.selectedDate = payload.date; state.view = "calendar"; render();
 }
 function deleteItem(id){
-  if(!confirm("Supprimer ce slot ?")) return;
+  if(!confirm("Delete this slot?")) return;
   const list = state.data.years[state.currentYear].items;
   const idx = list.findIndex(x=>x.id===id);
   if(idx>=0) list.splice(idx,1);
@@ -354,13 +343,13 @@ function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2
 function importBackupJSON(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ const obj=JSON.parse(r.result); if(!obj||typeof obj!=="object") throw new Error("Format invalide"); state.data=obj; ensureYear(state.currentYear); save(); render(); alert("Sauvegarde importée."); }catch(err){ alert("Import impossible : "+err.message); } };
+  r.onload=()=>{ try{ const obj=JSON.parse(r.result); if(!obj||typeof obj!=="object") throw new Error("Invalid file"); state.data=obj; ensureYear(state.currentYear); save(); render(); alert("Backup restored."); }catch(err){ alert("Restore failed: "+err.message); } };
   r.readAsText(f);
 }
 function exportYearICS(){
   const y = state.currentYear;
   const items = [...state.data.years[y].items].sort(sortByDateTime);
-  if(items.length===0){ alert("Aucun slot dans "+y); return; }
+  if(items.length===0){ alert("No slot in "+y); return; }
   const now = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
   const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//","CALSCALE:GREGORIAN","METHOD:PUBLISH",
     "BEGIN:VTIMEZONE","TZID:Europe/Paris","X-LIC-LOCATION:Europe/Paris",
@@ -383,11 +372,11 @@ function todayISO(){ const d=new Date(); return isoDate(d); }
 function isoDate(d){ return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-"); }
 function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
 function addMonths(d,n){ const x=new Date(d); x.setMonth(x.getMonth()+n); return x; }
-function weekStart(d){ const x=new Date(d); const wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return x; } // Lundi
+function weekStart(d){ const x=new Date(d); const wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return x; }
 function sortByDateTime(a,b){ const A=a.date+(a.time||""); const B=b.date+(b.time||""); return A<B?-1:A>B?1:0; }
 function escapeHTML(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
-function weekLabel(d){ const start=weekStart(d), end=addDays(start,6); const loc=locale(); const s=start.toLocaleDateString(loc,{day:"2-digit",month:"short"}); const e=end.toLocaleDateString(loc,{day:"2-digit",month:"short",year:"numeric"}); return (loc==="en-US"?"Week ":"Semaine ")+s+" – "+e; }
-function monthLabel(d){ return d.toLocaleDateString(locale(),{month:"long",year:"numeric"}); }
+function weekLabel(d){ const start=weekStart(d), end=addDays(start,6); const s=start.toLocaleDateString("en-US",{day:"2-digit",month:"short"}); const e=end.toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); return "Week "+s+" – "+e; }
+function monthLabel(d){ return d.toLocaleDateString("en-US",{month:"long",year:"numeric"}); }
 function icsEscape(s){ return (s||"").replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,|;/g, m=>m===","?"\\,":"\\;"); }
 function download(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },0); }
 function applyTheme(name){
@@ -395,9 +384,7 @@ function applyTheme(name){
   html.removeAttribute("data-theme");
   if(name==="ardoise") html.setAttribute("data-theme","ardoise");
   else if(name==="porcelaine") html.setAttribute("data-theme","porcelaine");
-  else html.setAttribute("data-theme",""); // nocturne par défaut
 }
-function locale(){ return (langSelect?.value==="en") ? "en-US" : "fr-FR"; }
 
 /* -------- AUDIO -------- */
 function playBeep(){

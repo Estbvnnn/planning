@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -14,38 +14,36 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <!-- zone de geste pour ouvrir le menu -->
   <div id="edgeOpener"></div>
 
   <!-- Drawer -->
   <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu">
     <div class="drawer-header">
-      <h2>Planis</h2>
-      <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer">✕</button>
+      <img src="icons/icon-192.png" alt="Planis" class="brand-logo">
+      <button id="closeDrawerBtn" class="icon-btn" aria-label="Close">✕</button>
     </div>
 
     <nav class="drawer-section">
-      <div class="section-title">ANNÉES</div>
+      <div class="section-title">YEARS</div>
       <ul id="yearList" class="year-list"></ul>
-      <button id="addYearBtn" class="btn btn--solid">+ Ajouter une année</button>
+      <button id="addYearBtn" class="btn btn--solid">+ Add a year</button>
     </nav>
 
     <nav class="drawer-section">
-      <div class="section-title">SAUVEGARDE LOCALE</div>
-      <p class="caption">Enregistre/restore tes données sur ton appareil. Rien n’est envoyé en ligne.</p>
+      <div class="section-title">LOCAL BACKUP</div>
+      <p class="caption">Save/restore data on your device. Nothing is uploaded.</p>
       <div class="stack">
-        <button id="backupBtn" class="btn btn--ghost">Sauvegarder (.json)</button>
+        <button id="backupBtn" class="btn btn--ghost">Backup (.json)</button>
         <label class="btn btn--ghost file-btn" id="restoreLabel">
-          Restaurer (.json)…
+          Restore (.json)…
           <input type="file" id="restoreInput" accept="application/json" />
         </label>
       </div>
     </nav>
 
     <footer class="drawer-footer">
-      <button id="openSettingsBtn" class="btn btn--outline wide">⚙︎ Réglages</button>
-      <div class="drawer-footnote">Ultra épuré. Offline. PWA. — v6.2</div>
+      <button id="openSettingsBtn" class="btn btn--outline wide">⚙︎ Settings</button>
+      <div class="drawer-footnote">Ultra simple. Offline. PWA. — v6.3</div>
     </footer>
   </aside>
 
@@ -54,125 +52,111 @@
     <button id="hamburgerBtn" class="hamburger" aria-label="Menu" aria-controls="drawer" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
-    <div class="top-title" id="topTitle">Accueil</div>
+    <div class="top-title" id="topTitle">Home</div>
     <div class="top-actions">
-      <button id="viewModeBtn" class="chip" hidden aria-haspopup="true" aria-expanded="false">Jour ▾</button>
-      <button id="installBtn" class="install-btn" hidden>Installer</button>
+      <button id="viewModeBtn" class="chip" hidden aria-haspopup="true" aria-expanded="false">Day ▾</button>
+      <button id="installBtn" class="install-btn" hidden>Install</button>
     </div>
-    <!-- menu d’options de vue -->
     <div id="viewMenu" class="menu" hidden>
-      <button data-view="day">Jour</button>
-      <button data-view="week">Semaine</button>
-      <button data-view="month">Mois</button>
+      <button data-view="day">Day</button>
+      <button data-view="week">Week</button>
+      <button data-view="month">Month</button>
     </div>
   </header>
 
-  <!-- Contenu -->
+  <!-- Content -->
   <main id="content">
-
-    <!-- Accueil -->
     <section id="homeSection" class="home">
-      <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter">+</button>
-      <p class="muted">Touchez “+” pour créer un slot puis rangez-le dans votre calendrier.</p>
+      <button id="addItemLargeBtn" class="big-plus" aria-label="Add">+</button>
+      <p class="muted muted-narrow">Tap “+” to add your first slot.</p>
     </section>
 
-    <!-- Planning -->
     <section id="calendarSection" class="calendar" hidden>
       <div class="cal-header">
         <div id="calLabel" class="cal-label">—</div>
         <div class="cal-actions">
-          <button id="exportYearBtn" class="chip ghost" title="Exporter l’année (.ics)">.ics</button>
-          <button id="addItemFab" class="fab" aria-label="Ajouter">+</button>
+          <button id="exportYearBtn" class="chip ghost" title="Export year (.ics)">.ics</button>
+          <button id="addItemFab" class="fab" aria-label="Add">+</button>
         </div>
       </div>
       <div id="calContent" class="cal-content"></div>
     </section>
-
   </main>
 
-  <!-- Modal Ajouter/Modifier -->
+  <!-- Item modal -->
   <dialog id="itemModal" class="modal">
-    <form method="dialog" class="modal-card" id="itemForm">
-      <h3 id="modalTitle">Nouveau slot</h3>
+    <form method="dialog" class="modal-card" id="itemForm" novalidate>
+      <h3 id="modalTitle">New slot</h3>
       <input type="hidden" id="itemId" />
       <div class="field">
-        <label for="itemTitle">Titre</label>
-        <input id="itemTitle" required maxlength="120" placeholder="Ex. Rendez-vous" />
+        <label for="itemTitle">Title</label>
+        <input id="itemTitle" maxlength="120" placeholder="e.g. Meeting" />
       </div>
       <div class="field">
         <label for="itemDate">Date</label>
-        <input id="itemDate" type="date" required />
+        <input id="itemDate" type="date" />
       </div>
       <div class="field">
-        <label for="itemTime">Heure (optionnel)</label>
+        <label for="itemTime">Time (optional)</label>
         <input id="itemTime" type="time" />
       </div>
       <div class="field">
         <label for="itemNotes">Notes</label>
-        <textarea id="itemNotes" rows="3" placeholder="Détails (optionnel)"></textarea>
+        <textarea id="itemNotes" rows="3" placeholder="Details (optional)"></textarea>
       </div>
       <div class="actions">
-        <button class="btn btn--ghost" value="cancel">Annuler</button>
-        <button class="btn btn--solid" id="saveItemBtn" value="default">Enregistrer</button>
+        <button class="btn btn--solid" id="saveItemBtn" value="default">Save</button>
       </div>
     </form>
   </dialog>
 
-  <!-- Modal Nouvelle année -->
+  <!-- Year modal -->
   <dialog id="yearModal" class="modal">
     <form method="dialog" class="modal-card" id="yearForm">
-      <h3>Nouvelle année</h3>
+      <h3>New year</h3>
       <div class="field">
-        <label for="yearInput">Année</label>
+        <label for="yearInput">Year</label>
         <input id="yearInput" inputmode="numeric" pattern="[0-9]{4}" placeholder="2026" required />
       </div>
       <div class="actions">
-        <button class="btn btn--ghost" value="cancel">Annuler</button>
-        <button id="yearSaveBtn" class="btn btn--solid" value="default">Créer</button>
+        <button class="btn btn--ghost" value="cancel">Cancel</button>
+        <button id="yearSaveBtn" class="btn btn--solid" value="default">Create</button>
       </div>
     </form>
   </dialog>
 
-  <!-- Réglages -->
+  <!-- Settings -->
   <dialog id="settingsModal" class="modal">
     <form method="dialog" class="modal-card" id="settingsForm">
-      <h3>Réglages</h3>
+      <h3>Settings</h3>
       <div class="field">
-        <label for="themeSelect">Thème</label>
+        <label for="themeSelect">Theme</label>
         <select id="themeSelect">
           <option value="nocturne">Nocturne</option>
-          <option value="ardoise">Ardoise</option>
-          <option value="porcelaine">Porcelaine</option>
+          <option value="ardoise">Slate</option>
+          <option value="porcelaine">Porcelain</option>
         </select>
       </div>
       <div class="field">
-        <label for="langSelect">Langue</label>
-        <select id="langSelect">
-          <option value="fr">Français</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="reminderTimeSettings">Rappel quotidien (heure)</label>
+        <label for="reminderTimeSettings">Daily reminder (time)</label>
         <input id="reminderTimeSettings" type="time" />
       </div>
       <div class="field">
-        <label for="beepStyleSelect">Style de bip</label>
+        <label for="beepStyleSelect">Beep style</label>
         <select id="beepStyleSelect">
-          <option value="classic">Classique</option>
-          <option value="chime">Carillon</option>
-          <option value="bell">Cloche</option>
-          <option value="click">Clic</option>
-          <option value="sweep">Montée</option>
+          <option value="classic">Classic</option>
+          <option value="chime">Chime</option>
+          <option value="bell">Bell</option>
+          <option value="click">Click</option>
+          <option value="sweep">Sweep</option>
         </select>
       </div>
       <div class="field row">
-        <button type="button" class="btn btn--ghost" id="testBeepBtn">Tester le bip</button>
-        <button type="button" class="btn btn--outline" id="makeICSFromSettingsBtn">Créer le rappel calendrier (.ics)</button>
+        <button type="button" class="btn btn--ghost" id="testBeepBtn">Test beep</button>
+        <button type="button" class="btn btn--outline" id="makeICSFromSettingsBtn">Create calendar reminder (.ics)</button>
       </div>
       <div class="actions">
-        <button id="closeSettingsBtn" class="btn btn--ghost" value="cancel">Fermer</button>
-        <button class="btn btn--solid" id="saveSettingsBtn" value="default">Enregistrer</button>
+        <button class="btn btn--solid" id="saveSettingsBtn" value="default">Save</button>
       </div>
     </form>
   </dialog>

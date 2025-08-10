@@ -1,4 +1,4 @@
-const CACHE_NAME = "planis-cache-v11"; // bump
+const CACHE_NAME = "planis-cache-v12";
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",
