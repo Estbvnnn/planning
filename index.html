@@ -15,13 +15,13 @@
 </head>
 <body>
 
-  <!-- Gesture edge (ouvre le menu en glissant depuis le bord) -->
+  <!-- Edge gesture pour ouvrir le menu -->
   <div id="edgeOpener"></div>
 
   <!-- Drawer -->
   <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu">
     <div class="drawer-header">
-      <h2 id="i-menuTitle">Planning</h2>
+      <h2>Planning</h2>
       <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer">✕</button>
     </div>
 
@@ -42,7 +42,7 @@
 
     <footer class="drawer-footer">
       <button id="openSettingsBtn" class="btn btn--outline wide">⚙︎ Paramètres</button>
-      <div id="footnote" class="drawer-footnote">Ultra épuré. Offline. PWA. — v6</div>
+      <div class="drawer-footnote">Ultra épuré. Offline. PWA. — v6.1</div>
     </footer>
   </aside>
 
@@ -53,7 +53,7 @@
     </button>
     <div class="top-title" id="topTitle">Accueil</div>
     <div class="top-actions">
-      <button id="viewModeBtn" class="chip" aria-haspopup="true" aria-expanded="false">Jour ▾</button>
+      <button id="viewModeBtn" class="chip" hidden aria-haspopup="true" aria-expanded="false">Jour ▾</button>
       <button id="installBtn" class="install-btn" hidden>Installer</button>
     </div>
     <!-- menu d’options de vue -->
@@ -67,7 +67,7 @@
   <!-- Contenu -->
   <main id="content">
 
-    <!-- Accueil neutre -->
+    <!-- Accueil -->
     <section id="homeSection" class="home">
       <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter">+</button>
       <p class="muted">Touchez “+” pour créer un slot puis rangez-le dans votre calendrier.</p>
@@ -82,8 +82,6 @@
           <button id="addItemFab" class="fab" aria-label="Ajouter">+</button>
         </div>
       </div>
-
-      <!-- zone qui capte le swipe gauche/droite -->
       <div id="calContent" class="cal-content"></div>
     </section>
 
@@ -117,20 +115,20 @@
     </form>
   </dialog>
 
-  <!-- Template carte -->
-  <template id="itemTemplate">
-    <article class="card">
-      <div class="card-row">
-        <div class="card-title"></div>
-        <div class="card-date"></div>
+  <!-- Modal Nouvelle année (fiable sur iOS) -->
+  <dialog id="yearModal" class="modal">
+    <form method="dialog" class="modal-card" id="yearForm">
+      <h3>Nouvelle année</h3>
+      <div class="field">
+        <label for="yearInput">Année</label>
+        <input id="yearInput" inputmode="numeric" pattern="[0-9]{4}" placeholder="2026" required />
       </div>
-      <div class="card-notes"></div>
-      <div class="card-actions">
-        <button class="mini-btn edit">Modifier</button>
-        <button class="mini-btn danger delete">Supprimer</button>
+      <div class="actions">
+        <button class="btn btn--ghost" value="cancel">Annuler</button>
+        <button id="yearSaveBtn" class="btn btn--solid" value="default">Créer</button>
       </div>
-    </article>
-  </template>
+    </form>
+  </dialog>
 
   <!-- Paramètres -->
   <dialog id="settingsModal" class="modal">
