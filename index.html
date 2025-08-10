@@ -24,14 +24,14 @@
     <nav class="drawer-section">
       <div class="section-title" data-i18n="yearsHeading">ANNÉES</div>
       <ul id="yearList" class="year-list"></ul>
-      <button id="addYearBtn" class="ghost-btn" data-i18n="addYear">+ Ajouter une année</button>
+      <button id="addYearBtn" class="btn btn--solid" data-i18n="addYear">+ Ajouter une année</button>
     </nav>
 
     <nav class="drawer-section">
       <div class="section-title" data-i18n="toolsHeading">OUTILS</div>
-      <button id="exportYearBtn" class="ghost-btn" data-i18n="exportYear">Exporter l’année (.ics)</button>
-      <button id="backupBtn" class="ghost-btn" data-i18n="exportBackup">Exporter sauvegarde (.json)</button>
-      <label class="file-btn">
+      <button id="exportYearBtn" class="btn btn--ghost" data-i18n="exportYear">Exporter l’année (.ics)</button>
+      <button id="backupBtn" class="btn btn--ghost" data-i18n="exportBackup">Exporter sauvegarde (.json)</button>
+      <label class="file-btn btn btn--ghost">
         <span data-i18n="importBackup">Importer sauvegarde (.json)</span>
         <input type="file" id="restoreInput" accept="application/json" />
       </label>
@@ -39,8 +39,8 @@
 
     <!-- collé en bas -->
     <footer class="drawer-footer">
-      <button id="openSettingsBtn" class="ghost-btn wide" data-i18n="settings">⚙︎ Paramètres</button>
-      <div id="footnote" class="drawer-footnote">Ultra épuré. Offline. PWA. — v4</div>
+      <button id="openSettingsBtn" class="btn btn--outline wide" data-i18n="settings">⚙︎ Paramètres</button>
+      <div id="footnote" class="drawer-footnote">Ultra épuré. Offline. PWA. — v5</div>
     </footer>
   </aside>
 
@@ -90,9 +90,10 @@
         <label for="itemNotes" data-i18n="notes">Notes</label>
         <textarea id="itemNotes" rows="3" placeholder="Détails (optionnel)"></textarea>
       </div>
+
       <div class="actions">
-        <button class="ghost-btn" value="cancel" data-i18n="cancel">Annuler</button>
-        <button class="primary-btn" id="saveItemBtn" value="default" data-i18n="save">Enregistrer</button>
+        <button class="btn btn--ghost" value="cancel" data-i18n="cancel">Annuler</button>
+        <button class="btn btn--solid" id="saveItemBtn" value="default" data-i18n="save">Enregistrer</button>
       </div>
     </form>
   </dialog>
@@ -136,20 +137,27 @@
       <div class="field">
         <label for="reminderTimeSettings" data-i18n="dailyReminder">Rappel quotidien (heure)</label>
         <input id="reminderTimeSettings" type="time" />
-        <label class="switch-row">
-          <input id="soundEnabled" type="checkbox" />
-          <span data-i18n="beep">Activer le bip (via Calendrier)</span>
-        </label>
       </div>
 
       <div class="field">
-        <button type="button" class="ghost-btn" id="testBeepBtn" data-i18n="testBeep">Tester le bip</button>
-        <button type="button" class="ghost-btn" id="makeICSFromSettingsBtn" data-i18n="createICS">Créer le rappel calendrier (.ics)</button>
+        <label for="beepStyleSelect" data-i18n="beepStyle">Style de bip</label>
+        <select id="beepStyleSelect">
+          <option value="classic" data-i18n="beepClassic">Classique</option>
+          <option value="chime" data-i18n="beepChime">Carillon</option>
+          <option value="bell" data-i18n="beepBell">Cloche</option>
+          <option value="click" data-i18n="beepClick">Clic</option>
+          <option value="sweep" data-i18n="beepSweep">Montée</option>
+        </select>
+      </div>
+
+      <div class="field row">
+        <button type="button" class="btn btn--ghost" id="testBeepBtn" data-i18n="testBeep">Tester le bip</button>
+        <button type="button" class="btn btn--outline" id="makeICSFromSettingsBtn" data-i18n="createICS">Créer le rappel calendrier (.ics)</button>
       </div>
 
       <div class="actions">
-        <button class="ghost-btn" value="cancel" id="closeSettingsBtn" data-i18n="close">Fermer</button>
-        <button class="primary-btn" id="saveSettingsBtn" value="default" data-i18n="save">Enregistrer</button>
+        <button class="btn btn--ghost" value="cancel" id="closeSettingsBtn" data-i18n="close">Fermer</button>
+        <button class="btn btn--solid" id="saveSettingsBtn" value="default" data-i18n="save">Enregistrer</button>
       </div>
     </form>
   </dialog>

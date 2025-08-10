@@ -1,4 +1,4 @@
-// Planning PWA — v4 (light contrast, z-index, close-on-plus, i18n full)
+// Planning PWA — v5 (UI polish, no overlap, unified buttons, 5 beep styles, i18n)
 const $ = (q, root=document) => root.querySelector(q);
 const $$ = (q, root=document) => Array.from(root.querySelectorAll(q));
 
@@ -35,16 +35,18 @@ const drawer = $("#drawer");
 const hamburgerBtn = $("#hamburgerBtn");
 const closeDrawerBtn = $("#closeDrawerBtn");
 
+// Settings
 const openSettingsBtn = $("#openSettingsBtn");
 const settingsModal = $("#settingsModal");
 const themeSelect = $("#themeSelect");
 const langSelect = $("#langSelect");
 const reminderTimeSettings = $("#reminderTimeSettings");
-const soundEnabledInput = $("#soundEnabled");
+const beepStyleSelect = $("#beepStyleSelect");
 const testBeepBtn = $("#testBeepBtn");
 const makeICSFromSettingsBtn = $("#makeICSFromSettingsBtn");
 const saveSettingsBtn = $("#saveSettingsBtn");
 
+// i18n
 const dict = {
   fr: {
     menuTitle:"Planning",
@@ -60,12 +62,10 @@ const dict = {
     edit:"Modifier", delete:"Supprimer",
     theme:"Thème", themeAuto:"Auto (système)", themeDark:"Sombre", themeLight:"Clair",
     language:"Langue", dailyReminder:"Rappel quotidien (heure)",
-    beep:"Activer le bip (via Calendrier)",
-    testBeep:"Tester le bip", createICS:"Créer le rappel calendrier (.ics)",
-    close:"Fermer",
+    beepStyle:"Style de bip", beepClassic:"Classique", beepChime:"Carillon", beepBell:"Cloche", beepClick:"Clic", beepSweep:"Montée",
+    testBeep:"Tester le bip", createICS:"Créer le rappel calendrier (.ics)", close:"Fermer",
     checkTomorrow:"Vérifier le planning de demain",
-    toastImport:"Sauvegarde importée.",
-    toastImportFail:"Import impossible : "
+    toastImport:"Sauvegarde importée.", toastImportFail:"Import impossible : "
   },
   en: {
     menuTitle:"Planner",
@@ -81,12 +81,10 @@ const dict = {
     edit:"Edit", delete:"Delete",
     theme:"Theme", themeAuto:"Auto (system)", themeDark:"Dark", themeLight:"Light",
     language:"Language", dailyReminder:"Daily reminder (time)",
-    beep:"Enable beep (via Calendar)",
-    testBeep:"Test beep", createICS:"Create calendar reminder (.ics)",
-    close:"Close",
+    beepStyle:"Beep style", beepClassic:"Classic", beepChime:"Chime", beepBell:"Bell", beepClick:"Click", beepSweep:"Sweep",
+    testBeep:"Test beep", createICS:"Create calendar reminder (.ics)", close:"Close",
     checkTomorrow:"Review tomorrow’s plan",
-    toastImport:"Backup imported.",
-    toastImportFail:"Import failed: "
+    toastImport:"Backup imported.", toastImportFail:"Import failed: "
   }
 };
 const i18n = { lang:"fr", t:k => (dict[i18n.lang] && dict[i18n.lang][k]) || dict.fr[k] || k };
@@ -97,12 +95,13 @@ function init(){
   const raw = localStorage.getItem("planningData");
   if(raw){ try{ state.data = JSON.parse(raw); }catch{ state.data=null; } }
   if(!state.data){
-    state.data = { years:{}, settings:{ reminderTime:"21:00", theme:"auto", language:"fr", sound:true }, currentYear:String(new Date().getFullYear()) };
+    state.data = { years:{}, settings:{ reminderTime:"21:00", theme:"auto", language:"fr", beepStyle:"classic" }, currentYear:String(new Date().getFullYear()) };
   }
   i18n.lang = state.data.settings.language || "fr";
   applyTheme(state.data.settings.theme || "auto");
   ensureYear(state.currentYear);
 
+  // Listeners
   addItemLargeBtn.addEventListener("click", () => { closeDrawer(); openItemModal(); });
   addItemFab.addEventListener("click", () => { closeDrawer(); openItemModal(); });
   itemForm.addEventListener("submit", onSaveItem);
@@ -117,12 +116,12 @@ function init(){
     state.data.settings.theme = themeSelect.value;
     state.data.settings.language = langSelect.value;
     state.data.settings.reminderTime = reminderTimeSettings.value || "21:00";
-    state.data.settings.sound = !!soundEnabledInput.checked;
+    state.data.settings.beepStyle = beepStyleSelect.value || "classic";
     save();
     i18n.lang = state.data.settings.language;
     applyTheme(state.data.settings.theme);
     applyI18n();
-    render();          // <- met à jour les “Modifier/Supprimer” existants
+    render();  // met à jour les libellés sur la liste
     settingsModal.close();
   });
   testBeepBtn.addEventListener("click", playBeep);
@@ -132,16 +131,18 @@ function init(){
   closeDrawerBtn.addEventListener("click", closeDrawer);
   drawer.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
 
+  // PWA install
   let deferredInstallPrompt = null;
-  window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt=e; installBtn.hidden=false; });
+  window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt = e; installBtn.hidden = false; });
   installBtn.addEventListener("click", async ()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; installBtn.hidden=true; });
 
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
+  // Defaults
   themeSelect.value = state.data.settings.theme || "auto";
   langSelect.value = state.data.settings.language || "fr";
   reminderTimeSettings.value = state.data.settings.reminderTime || "21:00";
-  soundEnabledInput.checked = !!state.data.settings.sound;
+  beepStyleSelect.value = state.data.settings.beepStyle || "classic";
 
   applyI18n();
   render();
@@ -159,7 +160,7 @@ function renderYearList(){
   yearList.innerHTML = "";
   Object.keys(state.data.years).sort().forEach(y=>{
     const btn = document.createElement("button");
-    btn.className="ghost-btn";
+    btn.className="btn btn--ghost";
     btn.textContent = y + (y===state.currentYear ? " •" : "");
     btn.addEventListener("click", ()=>{ state.currentYear=y; closeDrawer(); });
     yearList.appendChild(btn);
@@ -194,14 +195,13 @@ function onAddYear(){
   ensureYear(y); state.currentYear=y; closeDrawer();
 }
 function openItemModal(item){
-  closeDrawer(); // évite chevauchement
+  closeDrawer();
   modalTitle.textContent = item ? i18n.t("editItem") : i18n.t("newItem");
   itemIdInput.value = item ? item.id : "";
   itemTitleInput.value = item ? item.title : "";
   itemDateInput.value = item ? item.date : "";
   itemTimeInput.value = item ? (item.time || "") : "";
   itemNotesInput.value = item ? (item.notes || "") : "";
-  // placeholders selon la langue
   itemTitleInput.placeholder = (i18n.lang==="fr" ? "Ex. Rendez-vous" : "e.g. Meeting");
   itemNotesInput.placeholder = (i18n.lang==="fr" ? "Détails (optionnel)" : "Details (optional)");
   itemModal.showModal();
@@ -271,8 +271,7 @@ function createDailyReminderICS(){
     "BEGIN:DAYLIGHT","TZOFFSETFROM:+0100","TZOFFSETTO:+0200","TZNAME:CEST","DTSTART:19700329T020000","RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU","END:DAYLIGHT",
     "BEGIN:STANDARD","TZOFFSETFROM:+0200","TZOFFSETTO:+0100","TZNAME:CET","DTSTART:19701025T030000","RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU","END:STANDARD","END:VTIMEZONE",
     "BEGIN:VEVENT","UID:daily-reminder@"+cryptoRandom(),"DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z","DTSTART;TZID=Europe/Paris:"+dtStart,"RRULE:FREQ=DAILY",
-    "SUMMARY:"+icsEscape(i18n.t("checkTomorrow")),"DESCRIPTION:"+icsEscape(i18n.t("checkTomorrow")),"BEGIN:VALARM","TRIGGER:-PT0M",
-    (state.data.settings.sound?"ACTION:AUDIO":"ACTION:DISPLAY"),"END:VALARM","END:VEVENT","END:VCALENDAR"];
+    "SUMMARY:"+icsEscape(i18n.t("checkTomorrow")),"DESCRIPTION:"+icsEscape(i18n.t("checkTomorrow")),"BEGIN:VALARM","TRIGGER:-PT0M","ACTION:DISPLAY","END:VALARM","END:VEVENT","END:VCALENDAR"];
   downloadBlob(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planning-reminder-${time.replace(":","")}.ics`);
   alert(i18n.lang==="fr"?"Fichier .ics créé. Ajoutez-le à Calendrier si vous voulez une notif native.":"ICS created. Add to Calendar if you want a native notification.");
 }
@@ -288,13 +287,54 @@ function importBackupJSON(e){
 }
 function downloadBlob(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },0); }
 function applyTheme(mode){ const html=document.documentElement; if(mode==="dark") html.setAttribute("data-theme","dark"); else if(mode==="light") html.setAttribute("data-theme","light"); else html.removeAttribute("data-theme"); }
-function playBeep(){ try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(), g=ctx.createGain(); o.type="sine"; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.25); o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.3);}catch(e){console.warn("Audio not available",e);} }
 function applyI18n(){
   document.documentElement.lang = (i18n.lang==="en")?"en":"fr";
   $$("[data-i18n]").forEach(el=>{ const k=el.getAttribute("data-i18n"); if(dict[i18n.lang][k]) el.textContent=dict[i18n.lang][k]; });
-  // placeholders
   itemTitleInput.placeholder = (i18n.lang==="fr" ? "Ex. Rendez-vous" : "e.g. Meeting");
   itemNotesInput.placeholder = (i18n.lang==="fr" ? "Détails (optionnel)" : "Details (optional)");
-  // version visible
-  const foot=$("#footnote"); if(foot) foot.textContent=(i18n.lang==="fr"?"Ultra épuré. Offline. PWA. — v4":"Ultra minimal. Offline. PWA. — v4");
+  const foot=$("#footnote"); if(foot) foot.textContent=(i18n.lang==="fr"?"Ultra épuré. Offline. PWA. — v5":"Ultra minimal. Offline. PWA. — v5");
+}
+
+/* WebAudio beep styles (5 choix) */
+function playBeep(){
+  try{
+    const style = (beepStyleSelect?.value) || state.data.settings.beepStyle || "classic";
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    function tone(freq, type="sine", start=0, dur=0.25, gainMax=0.2){
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type; osc.frequency.setValueAtTime(freq, now + start);
+      g.gain.setValueAtTime(0.0001, now + start);
+      g.gain.exponentialRampToValueAtTime(gainMax, now + start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(now + start); osc.stop(now + start + dur + 0.02);
+    }
+    function sweep(f1, f2, dur=0.4){
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type="sine"; osc.frequency.setValueAtTime(f1, now);
+      osc.frequency.exponentialRampToValueAtTime(f2, now + dur);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      osc.connect(g).connect(ctx.destination); osc.start(now); osc.stop(now + dur + 0.02);
+    }
+    function click(){
+      const buffer = ctx.createBuffer(1, 2205, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * Math.exp(-i/200); }
+      const src = ctx.createBufferSource(); src.buffer = buffer;
+      src.connect(ctx.destination); src.start(now);
+    }
+
+    switch(style){
+      case "classic": tone(880,"sine",0,0.28,0.22); break;
+      case "chime":   tone(880,"sine",0,0.18,0.18); tone(660,"sine",0.16,0.22,0.16); break;
+      case "bell":    tone(660,"triangle",0,0.40,0.24); tone(1320,"sine",0,0.25,0.10); break;
+      case "click":   click(); break;
+      case "sweep":   sweep(500,1400,0.45); break;
+    }
+  }catch(e){ console.warn("Audio not available", e); }
 }

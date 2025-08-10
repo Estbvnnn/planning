@@ -1,5 +1,5 @@
 // Offline-first cache
-const CACHE_NAME = "planning-cache-v5"; // <— incrémenté
+const CACHE_NAME = "planning-cache-v6";  // <— nouvelle version
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",
@@ -17,7 +17,7 @@ self.addEventListener("fetch", e=>{
   if(e.request.method!=="GET") return;
   e.respondWith(
     caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{
-      const copy=r.clone(); caches.open(CACHE_NAME).then(cache=>cache.put(e.request,copy)).catch(()=>{});
+      caches.open(CACHE_NAME).then(cache=>cache.put(e.request, r.clone())).catch(()=>{});
       return r;
     }).catch(()=>c))
   );
