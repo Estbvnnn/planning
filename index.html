@@ -31,7 +31,7 @@
     </div>
   </header>
 
-  <!-- Drawer -->
+  <!-- Drawer (menu latéral) -->
   <aside id="drawer" class="drawer" aria-hidden="true">
     <div class="drawer-header">
       <img src="icons/icon-192.png" alt="Planis" class="brand-logo" />
@@ -44,23 +44,22 @@
       <button id="addYearBtn" class="btn btn--solid">+ Add a year</button>
     </section>
 
-    <section class="drawer-section">
+    <!-- Tools : mêmes actions, boutons plus compacts -->
+    <section class="drawer-section tools">
       <div class="section-title">Tools</div>
       <p class="caption">Backup & restore your data (JSON).</p>
       <div class="stack">
-        <button id="backupBtn" class="btn btn--ghost">Export backup (.json)</button>
-        <label class="btn btn--outline file-btn">
+        <button id="backupBtn" class="btn btn--ghost btn--compact">Export backup (.json)</button>
+        <label class="btn btn--outline btn--compact file-btn">
           <input id="restoreInput" type="file" accept="application/json" />
           Import backup (.json)
         </label>
       </div>
     </section>
 
-    <section class="drawer-section">
-      <button id="openSettingsBtn" class="btn btn--outline">⚙ Settings</button>
-    </section>
-
+    <!-- Settings tout en bas -->
     <div class="drawer-footer">
+      <button id="openSettingsBtn" class="btn btn--outline btn--compact">⚙ Settings</button>
       <div class="drawer-footnote">Ultra minimal. Offline. PWA.</div>
     </div>
   </aside>
