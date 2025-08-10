@@ -184,3 +184,47 @@ html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e
     padding-right: 2.6rem; /* espace pour la flèche/roue iOS */
   }
 }
+/* === v6.3.6 iPhone modal safe-area hotfix === */
+
+/* 1) Le <dialog> devient un conteneur centré avec padding latéral obligatoire */
+.modal{
+  display: grid !important;
+  place-items: center !important;
+
+  /* padding qui tient compte des encoches + au moins 18px de chaque côté */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
+  margin: 0 !important; /* on ne compte plus sur margin pour espacer */
+}
+
+/* 2) La carte occupe 100% de l’espace disponible du conteneur, avec un max-width */
+.modal-card{
+  width: 100% !important;    /* prend toute la largeur "utile" donnée par .modal */
+  max-width: 520px !important;
+  padding: 20px !important;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch; /* scroll fluide iOS si le contenu dépasse */
+  box-sizing: border-box;
+}
+
+/* 3) Zéro débordement des champs (iOS) */
+.field input,
+.field textarea,
+.modal-card select{
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 4) iOS: retire la déco native et réserve un peu d’espace à droite (flèche/roue) */
+@supports (-webkit-touch-callout: none) {
+  select, input[type="time"]{
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: none;
+    padding-right: 2.4rem;
+  }
+}

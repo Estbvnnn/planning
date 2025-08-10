@@ -1,4 +1,5 @@
-const CACHE_NAME = "planis-cache-v14";
+// service-worker.js
+const CACHE_NAME = "planis-cache-v18";
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",
