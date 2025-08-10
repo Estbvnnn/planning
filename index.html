@@ -15,46 +15,49 @@
 </head>
 <body>
   <!-- Drawer -->
-  <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu latéral">
+  <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu">
     <div class="drawer-header">
-      <h2>Planning</h2>
-      <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer le menu">✕</button>
+      <h2 id="i-menuTitle" data-i18n="menuTitle">Planning</h2>
+      <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer">✕</button>
     </div>
+
     <nav class="drawer-section">
-      <div class="section-title">Années</div>
+      <div class="section-title" data-i18n="yearsHeading">ANNÉES</div>
       <ul id="yearList" class="year-list"></ul>
-      <button id="addYearBtn" class="ghost-btn">+ Ajouter une année</button>
+      <button id="addYearBtn" class="ghost-btn" data-i18n="addYear">+ Ajouter une année</button>
     </nav>
+
     <nav class="drawer-section">
-      <div class="section-title">Outils</div>
-      <button id="exportYearBtn" class="ghost-btn">Exporter l’année (.ics)</button>
-      <button id="backupBtn" class="ghost-btn">Exporter sauvegarde (.json)</button>
+      <div class="section-title" data-i18n="toolsHeading">OUTILS</div>
+      <button id="exportYearBtn" class="ghost-btn" data-i18n="exportYear">Exporter l’année (.ics)</button>
+      <button id="backupBtn" class="ghost-btn" data-i18n="exportBackup">Exporter sauvegarde (.json)</button>
       <label class="file-btn">
-        Importer sauvegarde (.json)
+        <span data-i18n="importBackup">Importer sauvegarde (.json)</span>
         <input type="file" id="restoreInput" accept="application/json" />
       </label>
     </nav>
+
+    <!-- collé en bas -->
     <footer class="drawer-footer">
-      <button id="openSettingsBtn" class="ghost-btn small">⚙︎ Paramètres</button>
-      <div style="height:8px"></div>
-      <small>Ultra épuré. Offline. PWA.</small>
+      <button id="openSettingsBtn" class="ghost-btn wide" data-i18n="settings">⚙︎ Paramètres</button>
+      <div class="drawer-footnote">Ultra épuré. Offline. PWA.</div>
     </footer>
   </aside>
 
   <!-- Topbar -->
   <header class="topbar">
-    <button id="hamburgerBtn" class="hamburger" aria-label="Ouvrir le menu" aria-controls="drawer" aria-expanded="false">
+    <button id="hamburgerBtn" class="hamburger" aria-label="Menu" aria-controls="drawer" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <div class="top-title" id="currentYearLabel">—</div>
-    <button id="installBtn" class="install-btn" hidden>Installer</button>
+    <button id="installBtn" class="install-btn" hidden data-i18n="install">Installer</button>
   </header>
 
   <!-- Content -->
   <main id="content">
     <section id="emptyState" class="empty-state">
-      <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter un élément">+</button>
-      <p class="muted">Touchez “+” pour ajouter votre premier élément.</p>
+      <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter">+</button>
+      <p class="muted" id="emptyHint" data-i18n="tapPlus">Touchez “+” pour ajouter votre première entrée.</p>
     </section>
 
     <section id="itemsSection" class="items-section" hidden>
@@ -69,27 +72,27 @@
   <!-- Add/Edit modal -->
   <dialog id="itemModal" class="modal">
     <form method="dialog" class="modal-card" id="itemForm">
-      <h3 id="modalTitle">Nouvel élément</h3>
+      <h3 id="modalTitle" data-i18n="newItem">Nouvelle entrée</h3>
       <input type="hidden" id="itemId" />
       <div class="field">
-        <label for="itemTitle">Titre</label>
+        <label for="itemTitle" data-i18n="title">Titre</label>
         <input id="itemTitle" required maxlength="120" placeholder="Ex. Rendez-vous" />
       </div>
       <div class="field">
-        <label for="itemDate">Date</label>
+        <label for="itemDate" data-i18n="date">Date</label>
         <input id="itemDate" type="date" required />
       </div>
       <div class="field">
-        <label for="itemTime">Heure (optionnel)</label>
+        <label for="itemTime" data-i18n="timeOptional">Heure (optionnel)</label>
         <input id="itemTime" type="time" />
       </div>
       <div class="field">
-        <label for="itemNotes">Notes</label>
+        <label for="itemNotes" data-i18n="notes">Notes</label>
         <textarea id="itemNotes" rows="3" placeholder="Détails (optionnel)"></textarea>
       </div>
       <div class="actions">
-        <button class="ghost-btn" value="cancel">Annuler</button>
-        <button class="primary-btn" id="saveItemBtn" value="default">Enregistrer</button>
+        <button class="ghost-btn" value="cancel" data-i18n="cancel">Annuler</button>
+        <button class="primary-btn" id="saveItemBtn" value="default" data-i18n="save">Enregistrer</button>
       </div>
     </form>
   </dialog>
@@ -102,8 +105,8 @@
       </div>
       <div class="card-notes"></div>
       <div class="card-actions">
-        <button class="mini-btn edit">Modifier</button>
-        <button class="mini-btn danger delete">Supprimer</button>
+        <button class="mini-btn edit" data-i18n="edit">Modifier</button>
+        <button class="mini-btn danger delete" data-i18n="delete">Supprimer</button>
       </div>
     </article>
   </template>
@@ -111,19 +114,19 @@
   <!-- Settings modal -->
   <dialog id="settingsModal" class="modal">
     <form method="dialog" class="modal-card" id="settingsForm">
-      <h3 id="settingsTitle">Paramètres</h3>
+      <h3 id="settingsTitle" data-i18n="settings">Paramètres</h3>
 
       <div class="field">
-        <label for="themeSelect">Thème</label>
+        <label for="themeSelect" data-i18n="theme">Thème</label>
         <select id="themeSelect">
-          <option value="auto">Auto (système)</option>
-          <option value="dark">Sombre</option>
-          <option value="light">Clair</option>
+          <option value="auto" data-i18n="themeAuto">Auto (système)</option>
+          <option value="dark" data-i18n="themeDark">Sombre</option>
+          <option value="light" data-i18n="themeLight">Clair</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="langSelect">Langue</label>
+        <label for="langSelect" data-i18n="language">Langue</label>
         <select id="langSelect">
           <option value="fr">Français</option>
           <option value="en">English</option>
@@ -131,23 +134,22 @@
       </div>
 
       <div class="field">
-        <label for="reminderTimeSettings">Rappel quotidien (heure)</label>
+        <label for="reminderTimeSettings" data-i18n="dailyReminder">Rappel quotidien (heure)</label>
         <input id="reminderTimeSettings" type="time" />
         <label class="switch-row">
           <input id="soundEnabled" type="checkbox" />
-          <span>Activer le bip (via Calendrier)</span>
+          <span data-i18n="beep">Activer le bip (via Calendrier)</span>
         </label>
-        <div class="hint">Le son dépend des réglages de l’app Calendrier iOS.</div>
       </div>
 
       <div class="field">
-        <button type="button" class="ghost-btn" id="testBeepBtn">Tester le bip</button>
-        <button type="button" class="ghost-btn" id="makeICSFromSettingsBtn">Créer le rappel calendrier (.ics)</button>
+        <button type="button" class="ghost-btn" id="testBeepBtn" data-i18n="testBeep">Tester le bip</button>
+        <button type="button" class="ghost-btn" id="makeICSFromSettingsBtn" data-i18n="createICS">Créer le rappel calendrier (.ics)</button>
       </div>
 
       <div class="actions">
-        <button class="ghost-btn" value="cancel" id="closeSettingsBtn">Fermer</button>
-        <button class="primary-btn" id="saveSettingsBtn" value="default">Enregistrer</button>
+        <button class="ghost-btn" value="cancel" id="closeSettingsBtn" data-i18n="close">Fermer</button>
+        <button class="primary-btn" id="saveSettingsBtn" value="default" data-i18n="save">Enregistrer</button>
       </div>
     </form>
   </dialog>
