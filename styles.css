@@ -17,11 +17,20 @@ input, select, textarea, label {
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial;
+}
 #edgeOpener{position:fixed;left:0;top:0;width:24px;height:100dvh;z-index:140;background:transparent}
 
 /* Topbar */
-.topbar{position:sticky;top:0;z-index:150;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.5rem;padding:env(safe-area-inset-top) 10px 10px;background:rgba(18,18,20,.75);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}
+.topbar{
+  position:sticky;top:0;z-index:150;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.5rem;
+  padding:env(safe-area-inset-top) 10px 10px;
+  background:rgba(18,18,20,.75);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,.06)
+}
 .hamburger{width:42px;height:36px;background:none;border:0;padding:0;display:flex;flex-direction:column;justify-content:center;gap:5px;cursor:pointer}
 .hamburger span{display:block;height:2px;background:#fff;width:22px;border-radius:2px}
 .top-title{font-weight:700;opacity:.95;letter-spacing:.4px}
@@ -29,7 +38,12 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system
 .install-btn{border:1px solid rgba(255,255,255,.12);background:none;color:var(--text);padding:.45rem .7rem;border-radius:10px;font-weight:700}
 
 /* Drawer */
-.drawer{position:fixed;inset:0;width:86%;max-width:360px;transform:translateX(-120%);transition:transform .25s ease-out;background:var(--panel);box-shadow:var(--shadow);padding-top:env(safe-area-inset-top);display:flex;flex-direction:column;z-index:200}
+.drawer{
+  position:fixed;inset:0;width:86%;max-width:360px;
+  transform:translateX(-120%);transition:transform .25s ease-out;
+  background:var(--panel);box-shadow:var(--shadow);
+  padding-top:env(safe-area-inset-top);display:flex;flex-direction:column;z-index:200
+}
 .drawer.open{transform:translateX(0)}
 .drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px;border-bottom:1px solid rgba(255,255,255,.06)}
 .brand-logo{width:26px;height:26px;border-radius:8px;display:block}
@@ -42,7 +56,11 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system
 .drawer-footnote{margin-top:10px;font-size:12px;opacity:.7}
 
 /* Buttons */
-.btn{border:0;border-radius:14px;font-weight:800;letter-spacing:.2px;padding:.68rem .95rem;cursor:pointer;transition:transform .06s ease,box-shadow .2s ease;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:42px;width:100%}
+.btn{
+  border:0;border-radius:14px;font-weight:800;letter-spacing:.2px;
+  padding:.68rem .95rem;cursor:pointer;transition:transform .06s ease,box-shadow .2s ease;
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:42px;width:100%
+}
 .btn:active{transform:translateY(1px)}
 .btn--solid{color:#fff;background:linear-gradient(135deg,var(--grad-a),var(--grad-b));box-shadow:0 14px 28px rgba(74,126,232,.25)}
 .btn--ghost{color:#fff;background:linear-gradient(135deg,rgba(111,107,255,.18),rgba(74,126,232,.18));border:1px solid rgba(255,255,255,.08)}
@@ -92,7 +110,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system
 .card-notes{margin-top:6px;color:#bfc2ce;white-space:pre-wrap}
 .card-actions{display:flex;gap:8px;margin-top:10px}
 
-/* Modal (centrage + backdrop-close fiable) */
+/* Modal (centré et avec marge/padding pour éviter tout contact aux bords) */
 .modal{border:0;padding:0;background:transparent;z-index:300;position:fixed;inset:0}
 .modal[open]{display:flex;align-items:center;justify-content:center}
 .modal::backdrop{background:rgba(0,0,0,.55)}
@@ -100,18 +118,38 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system
   background:var(--panel);
   border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
-  width:min(520px, calc(100% - 32px));  /* marges latérales égales */
+
+  /* marges latérales accrues */
+  width:min(520px, calc(100% - 48px));
+
+  /* padding interne plus large */
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
   max-height:calc(100dvh - 24px - env(safe-area-inset-bottom));
-  padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+
   margin:auto; color:var(--text); box-shadow:var(--shadow);
   display:flex; flex-direction:column; overflow:auto;
 }
 .modal-card h3{margin:4px 0 12px;font-size:26px}
 .field{display:grid;gap:6px;margin:10px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.field input,.field textarea,.modal-card select{width:100%;background:#14161b;color:var(--text);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:.75rem .9rem;outline:none}
+.field input,
+.field textarea,
+.modal-card select{
+  width:100%;
+  max-width:100%;
+  background:#14161b;color:var(--text);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  padding:.75rem 1rem;
+  outline:none;
+}
 .field input:focus,.field textarea:focus,.modal-card select:focus{box-shadow:0 0 0 6px var(--ring);border-color:transparent}
 .actions{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:10px;background:linear-gradient(180deg,rgba(27,28,33,0),var(--panel) 50%)}
+
+/* Resp très petits écrans */
+@media (max-width: 360px){
+  .modal-card{ width:calc(100% - 56px); } /* ≈ 28px de marge de chaque côté */
+}
 
 /* Themes */
 html[data-theme="ardoise"]{
@@ -125,4 +163,6 @@ html[data-theme="porcelaine"]{
 html[data-theme="porcelaine"] .topbar{background:rgba(255,255,255,.9);border-bottom:1px solid #e5e7eb}
 html[data-theme="porcelaine"] .drawer-section{border-bottom:1px solid #eef0f4}
 html[data-theme="porcelaine"] .card{border-color:#e5e7eb}
-html[data-theme="porcelaine"] .field input,html[data-theme="porcelaine"] .field textarea,html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e5e7eb;color:#0f172a}
+html[data-theme="porcelaine"] .field input,
+html[data-theme="porcelaine"] .field textarea,
+html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e5e7eb;color:#0f172a}
