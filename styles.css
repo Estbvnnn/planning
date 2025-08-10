@@ -1,3 +1,15 @@
+/* iOS: stop zoom on tap/focus */
+html { -webkit-text-size-adjust: 100%; }
+
+/* force min 16px sur tous les éléments interactifs */
+button,
+.btn, .mini-btn, .chip, .fab, .hamburger, .icon-btn,
+input, select, textarea, label {
+  font-size: 16px;                 /* évite le zoom auto sur focus */
+  touch-action: manipulation;       /* coupe double-tap zoom (iOS 13.4+) */
+  -webkit-tap-highlight-color: transparent;
+}
+
 :root{
   --bg:#121214; --panel:#1b1c21; --muted:#9aa0ac; --text:#eef0f7;
   --grad-a:#6f6bff; --grad-b:#4a7ee8; --danger:#ef4444;
