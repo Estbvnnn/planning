@@ -1,4 +1,4 @@
-// Planis v6.3.9 — dialogs exclusifs + close overlays + iPhone friendly
+// Planis v6.4.0 — onboarding slideshow + existing features
 const $  = (q, r=document) => r.querySelector(q);
 
 /* -------------------- STATE -------------------- */
@@ -8,7 +8,8 @@ const state = {
   set currentYear(y){ this.data.currentYear = y; save(); render(); },
   view: "home",          // "home" | "calendar"
   viewMode: "day",       // "day" | "week" | "month"
-  selectedDate: todayISO()
+  selectedDate: todayISO(),
+  onboardingIndex: 0
 };
 
 /* -------------------- ELEMENTS -------------------- */
@@ -59,6 +60,14 @@ const yearForm = $("#yearForm");
 const yearInput = $("#yearInput");
 const installBtn = $("#installBtn");
 
+/* Onboarding */
+const onboardingModal = $("#onboardingModal");
+const obTrack = $("#obTrack");
+const obDots = $("#obDots");
+const obNext = $("#obNext");
+const obBack = $("#obBack");
+const obSkip = $("#obSkip");
+
 /* -------------------- INIT -------------------- */
 init();
 function init(){
@@ -69,12 +78,15 @@ function init(){
     state.data = {
       years:{},
       settings:{ theme:"nocturne", reminderTime:"21:00", beepStyle:"classic" },
-      currentYear: String(new Date().getFullYear())
+      currentYear: String(new Date().getFullYear()),
+      onboardingSeen: false
     };
   }
+  if (state.data.onboardingSeen === undefined) state.data.onboardingSeen = false;
+
   ensureYear(state.currentYear);
 
-  // Fill settings UI with saved values (if UI exists)
+  // Fill settings UI
   if (themeSelect) themeSelect.value = state.data.settings.theme || "nocturne";
   if (reminderTimeSettings) reminderTimeSettings.value = state.data.settings.reminderTime || "";
   if (beepStyleSelect) beepStyleSelect.value = state.data.settings.beepStyle || "classic";
@@ -85,7 +97,7 @@ function init(){
   drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
   enableDrawerSwipe(); enableEdgeOpen();
 
-  // Global “close-all overlays” in capture (click/touch anywhere)
+  // Global “close-all overlays” in capture
   ["pointerdown","click"].forEach(ev=>{
     document.addEventListener(ev,(e)=>{
       const t=e.target;
@@ -95,10 +107,7 @@ function init(){
       }
     }, true);
   });
-
-  // ESC closes overlays
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllOverlays(); });
-  // Close view menu on scroll/resize
   ["scroll","resize"].forEach(ev=> window.addEventListener(ev, ()=>{ viewMenu.hidden = true; }, {passive:true}));
 
   // Years
@@ -126,9 +135,9 @@ function init(){
   // View menu
   viewModeBtn?.addEventListener("click", ()=>{
     if(state.view!=="calendar") return;
-    const open=viewMenu.hidden;
-    viewMenu.hidden=!open;
-    viewModeBtn.setAttribute("aria-expanded", String(open));
+    const open=!(!viewMenu.hidden);
+    viewMenu.hidden = open; // toggle
+    viewModeBtn.setAttribute("aria-expanded", String(!open));
   });
   viewMenu?.addEventListener("click",(e)=>{
     const btn = e.target.closest("button[data-view]"); if(!btn) return;
@@ -158,9 +167,9 @@ function init(){
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // Backdrop click closes dialogs
-  [itemModal, yearModal, settingsModal].forEach(dlg=>{
-    dlg?.addEventListener("click",(e)=>{ if(e.target === dlg) dlg.close("cancel"); });
+  // Backdrop click closes dialogs (incl. onboarding)
+  [itemModal, yearModal, settingsModal, onboardingModal].forEach(dlg=>{
+    dlg?.addEventListener("click",(e)=>{ if(e.target === dlg){ dlg.close("cancel"); if(dlg===onboardingModal){ markOnboardingSeen(); } }});
   });
 
   // PWA install
@@ -175,18 +184,22 @@ function init(){
   applyTheme(state.data.settings.theme || "nocturne");
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
+  // Onboarding: show once (first run)
+  setupOnboarding();
+  if(!state.data.onboardingSeen){
+    openOnboarding();
+  }
+
   render();
 }
 
 /* -------------------- DIALOG HELPER -------------------- */
-// Ouvre un dialog en fermant tous les autres + overlays
 function openDialog(dlg){
-  [settingsModal, itemModal, yearModal].forEach(m => {
+  [settingsModal, itemModal, yearModal, onboardingModal].forEach(m => {
     if (m && m !== dlg && m.open) m.close();
   });
   closeAllOverlays();
   dlg.showModal();
-  // clic en dehors = fermer (one-time)
   dlg.addEventListener("click", (e)=>{ if(e.target === dlg) dlg.close("cancel"); }, {once:true});
 }
 
@@ -298,9 +311,7 @@ function itemCard(it){
       <button class="mini-btn edit">Edit</button>
       <button class="mini-btn danger delete">Delete</button>
     </div>`;
-  a.querySelector(".edit").addEventListener("click", ()=>{
-    openItemModal(it);
-  });
+  a.querySelector(".edit").addEventListener("click", ()=>{ openItemModal(it); });
   a.querySelector(".delete").addEventListener("click", ()=> deleteItem(it.id));
   return a;
 }
@@ -392,7 +403,7 @@ function exportYearICS(){
   download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planis-${y}.ics`);
 }
 
-// Daily reminder ICS (RRULE:DAILY)
+/* Daily reminder ICS */
 function createDailyReminderICS(){
   const time = (reminderTimeSettings?.value || "21:00").replace(":", "") + "00";
   const today = new Date();
@@ -411,6 +422,56 @@ function createDailyReminderICS(){
     "END:VEVENT","END:VCALENDAR"
   ];
   download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),"planis-daily-reminder.ics");
+}
+
+/* -------------------- ONBOARDING -------------------- */
+function setupOnboarding(){
+  if(!onboardingModal) return;
+  // dots
+  const slides = Array.from(obTrack?.children || []);
+  obDots.innerHTML = "";
+  slides.forEach((_,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.setAttribute("aria-label", `Go to slide ${i+1}`);
+    b.addEventListener("click", ()=> obGo(i));
+    obDots.appendChild(b);
+  });
+
+  obBack?.addEventListener("click", ()=> obGo(state.onboardingIndex-1));
+  obNext?.addEventListener("click", ()=>{
+    if(state.onboardingIndex < slides.length-1) obGo(state.onboardingIndex+1);
+    else { onboardingModal.close(); markOnboardingSeen(); }
+  });
+  obSkip?.addEventListener("click", ()=>{ onboardingModal.close(); markOnboardingSeen(); });
+
+  // swipe
+  let sx=0, sy=0, dragging=false;
+  obTrack.addEventListener("touchstart",(e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; },{passive:true});
+  obTrack.addEventListener("touchmove",(e)=>{
+    if(!dragging) return;
+    const t=e.touches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){
+      dragging=false;
+      if(dx<0) obGo(state.onboardingIndex+1); else obGo(state.onboardingIndex-1);
+    }
+  },{passive:true});
+  obTrack.addEventListener("touchend",()=> dragging=false);
+
+  obGo(0);
+}
+function openOnboarding(){ openDialog(onboardingModal); }
+function markOnboardingSeen(){ state.data.onboardingSeen = true; save(); }
+function obGo(n){
+  const slides = Array.from(obTrack?.children || []);
+  const max = slides.length-1;
+  state.onboardingIndex = Math.max(0, Math.min(max, n));
+  obTrack.style.transform = `translateX(-${state.onboardingIndex*100}%)`;
+  // dots
+  Array.from(obDots.children).forEach((d,i)=> d.setAttribute("aria-current", i===state.onboardingIndex ? "true" : "false"));
+  // buttons
+  obBack.disabled = state.onboardingIndex===0;
+  obNext.textContent = state.onboardingIndex===max ? "Got it" : "Next";
 }
 
 /* -------------------- UTILS -------------------- */

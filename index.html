@@ -11,8 +11,9 @@
   <link rel="icon" href="icons/icon-192.png" />
   <title>Planis</title>
 
-  <link rel="stylesheet" href="styles.css?v=25">
-  <script src="app.js?v=25" defer></script>
+  <!-- cache-bust -->
+  <link rel="stylesheet" href="styles.css?v=27">
+  <script src="app.js?v=27" defer></script>
 </head>
 <body>
 
@@ -44,7 +45,7 @@
       <button id="addYearBtn" class="btn btn--solid">+ Add a year</button>
     </section>
 
-    <!-- Tools : mêmes actions, boutons plus compacts -->
+    <!-- Tools : boutons plus compacts -->
     <section class="drawer-section tools">
       <div class="section-title">Tools</div>
       <p class="caption">Backup & restore your data (JSON).</p>
@@ -172,6 +173,53 @@
           <button type="submit" class="btn btn--solid">Add</button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <!-- Onboarding (first run only) -->
+  <dialog id="onboardingModal" class="modal ob-modal" aria-label="Welcome to Planis">
+    <div class="modal-card ob-card">
+      <div class="ob-track" id="obTrack">
+        <!-- Slide 1 -->
+        <section class="ob-slide">
+          <div class="ob-hero">✨</div>
+          <h3>Welcome to Planis</h3>
+          <p class="muted">A clean, offline-first planner. Install it and you’re ready.</p>
+        </section>
+        <!-- Slide 2 -->
+        <section class="ob-slide">
+          <div class="ob-hero">📅</div>
+          <h3>Create a year</h3>
+          <p class="muted">Open the menu (≡) → “+ Add a year”, then pick your calendar.</p>
+        </section>
+        <!-- Slide 3 -->
+        <section class="ob-slide">
+          <div class="ob-hero">➕</div>
+          <h3>Add your first slot</h3>
+          <p class="muted">Tap the “+” button, enter Title/Date, and Save. Easy.</p>
+        </section>
+        <!-- Slide 4 -->
+        <section class="ob-slide">
+          <div class="ob-hero">👆</div>
+          <h3>Navigate fast</h3>
+          <p class="muted">Use Day / Week / Month. Swipe left/right to move through time.</p>
+        </section>
+        <!-- Slide 5 -->
+        <section class="ob-slide">
+          <div class="ob-hero">🔔</div>
+          <h3>Daily reminder</h3>
+          <p class="muted">Settings → create a .ics reminder for a daily “bip” at your time.</p>
+        </section>
+      </div>
+
+      <div class="ob-dots" id="obDots" aria-label="Slides progress"></div>
+
+      <div class="ob-controls">
+        <button id="obSkip" class="btn btn--outline">Skip</button>
+        <div class="ob-spacer"></div>
+        <button id="obBack" class="btn btn--outline" disabled>Back</button>
+        <button id="obNext" class="btn btn--solid">Next</button>
+      </div>
     </div>
   </dialog>
 

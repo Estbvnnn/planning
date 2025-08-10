@@ -1,8 +1,7 @@
-// Planis SW v20 — network-first for HTML/CSS/JS
-// service-worker.js
-const CACHE_NAME = "planis-cache-v24";
+// Planis SW v27 — network-first for HTML/CSS/JS
+const CACHE_NAME = "planis-cache-v27";
 const ASSETS = [
-  "./","./index.html?v=20","./styles.css?v=20","./app.js?v=20",
+  "./","./index.html?v=27","./styles.css?v=27","./app.js?v=27",
   "./manifest.webmanifest",
   "./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png",
 ];
@@ -24,7 +23,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   const ext = url.pathname.split(".").pop();
 
-  // HTML/JS/CSS => network-first (évite l'ancien cache)
+  // HTML/JS/CSS => network-first
   if (["html","js","css"].includes(ext) || url.pathname === "/" ) {
     event.respondWith(
       fetch(event.request).then(r=>{
@@ -35,7 +34,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Autres => cache-first
+  // Others => cache-first
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).then(r=>{
       caches.open(CACHE_NAME).then(c=>c.put(event.request, r.clone()));
