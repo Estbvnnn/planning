@@ -1,4 +1,4 @@
-const CACHE_NAME = "planis-cache-v13";
+const CACHE_NAME = "planis-cache-v14";
 const ASSETS = [
   "./","./index.html","./styles.css","./app.js",
   "./manifest.webmanifest",

@@ -1,4 +1,4 @@
-// Planis v6.3 — English UI, backdrop-close modals, vertical week, logo in drawer
+// Planis v6.3.2 — centered modal + reliable backdrop close
 const $  = (q, r=document) => r.querySelector(q);
 const $$ = (q, r=document) => Array.from(r.querySelectorAll(q));
 
@@ -37,10 +37,7 @@ const topTitle = $("#topTitle");
 const viewModeBtn = $("#viewModeBtn");
 const viewMenu = $("#viewMenu");
 
-const homeSection = $("#homeSection");
 const addItemLargeBtn = $("#addItemLargeBtn");
-
-const calendarSection = $("#calendarSection");
 const calLabel = $("#calLabel");
 const calContent = $("#calContent");
 const addItemFab = $("#addItemFab");
@@ -144,14 +141,9 @@ function init(){
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // Backdrop-close for all dialogs
+  /* Backdrop-close fiable pour tous les dialogs */
   [itemModal, yearModal, settingsModal].forEach(dlg=>{
-    dlg?.addEventListener("pointerdown",(e)=>{
-      const card = dlg.querySelector(".modal-card");
-      if(!card) return;
-      const inside = e.composedPath().includes(card);
-      if(!inside) dlg.close("cancel");
-    });
+    dlg?.addEventListener("click",(e)=>{ if(e.target === dlg) dlg.close("cancel"); });
   });
 
   /* PWA install */
@@ -159,9 +151,7 @@ function init(){
   window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt = e; installBtn.hidden=false; });
   installBtn?.addEventListener("click", async ()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; installBtn.hidden=true; });
 
-  /* defaults */
   applyTheme(state.data.settings.theme || "nocturne");
-
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
   render();
@@ -184,13 +174,13 @@ function render(){
       state.selectedDate = todayISO();
     }
     const d = new Date(state.selectedDate);
-    topTitle.textContent = `Calendar ${state.currentYear}`;
+    $("#topTitle").textContent = `Calendar ${state.currentYear}`;
     calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})
                       : state.viewMode==="week" ? weekLabel(d)
                       : monthLabel(d);
     viewModeBtn.hidden = false;
   }else{
-    topTitle.textContent = "Home";
+    $("#topTitle").textContent = "Home";
     viewModeBtn.hidden = true; viewMenu.hidden = true;
   }
 
@@ -230,7 +220,7 @@ function renderCalendar(){
     calContent.appendChild(list);
   }
   else if(state.viewMode==="week"){
-    const grid = document.createElement("div"); grid.className="week-grid"; // 1 column (vertical)
+    const grid = document.createElement("div"); grid.className="week-grid";
     const start = weekStart(d);
     for(let i=0;i<7;i++){
       const day = addDays(start,i);
