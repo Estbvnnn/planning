@@ -1,5 +1,6 @@
 // Planis SW v20 — network-first for HTML/CSS/JS
-const CACHE_NAME = "planis-cache-v21";
+// service-worker.js
+const CACHE_NAME = "planis-cache-v22";
 const ASSETS = [
   "./","./index.html?v=20","./styles.css?v=20","./app.js?v=20",
   "./manifest.webmanifest",

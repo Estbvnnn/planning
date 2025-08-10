@@ -175,3 +175,26 @@ html[data-theme="porcelaine"] .modal-card select{background:#fff;border-color:#e
     padding-right: 2.4rem;
   }
 }
+/* === v6.3.10 iPhone date input hotfix === */
+/* Empêche le débordement du champ date dans "New slot" sur iOS */
+#itemDate{
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2.6rem;           /* place pour l’icône calendrier iOS */
+  overflow: hidden;                 /* coupe le texte si trop long ("10 août 2025") */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Ajustements spécifiques WebKit iOS */
+@supports (-webkit-touch-callout: none) {
+  #itemDate{ -webkit-padding-end: 2.6rem; }
+  #itemDate::-webkit-date-and-time-value{ text-align: left; }
+  #itemDate::-webkit-calendar-picker-indicator{
+    margin-right: .25rem;           /* évite que l’icône pousse le contenu */
+  }
+}
