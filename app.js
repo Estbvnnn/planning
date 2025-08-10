@@ -1,7 +1,7 @@
-// Planis v6.4.0 — onboarding slideshow + existing features
+// Planis v6.4.0-fr — interface FR + onboarding + fonctionnalités existantes
 const $  = (q, r=document) => r.querySelector(q);
 
-/* -------------------- STATE -------------------- */
+/* -------------------- ÉTAT -------------------- */
 const state = {
   data: null,
   get currentYear(){ return this.data.currentYear || String(new Date().getFullYear()); },
@@ -12,7 +12,7 @@ const state = {
   onboardingIndex: 0
 };
 
-/* -------------------- ELEMENTS -------------------- */
+/* -------------------- ÉLÉMENTS -------------------- */
 const drawer = $("#drawer");
 const hamburgerBtn = $("#hamburgerBtn");
 const closeDrawerBtn = $("#closeDrawerBtn");
@@ -71,7 +71,7 @@ const obSkip = $("#obSkip");
 /* -------------------- INIT -------------------- */
 init();
 function init(){
-  // load/save bootstrap
+  // charger / initialiser
   const raw = localStorage.getItem("planningData");
   if(raw){ try{ state.data = JSON.parse(raw); } catch{ state.data=null; } }
   if(!state.data){
@@ -86,18 +86,18 @@ function init(){
 
   ensureYear(state.currentYear);
 
-  // Fill settings UI
+  // Pré-remplir les réglages
   if (themeSelect) themeSelect.value = state.data.settings.theme || "nocturne";
   if (reminderTimeSettings) reminderTimeSettings.value = state.data.settings.reminderTime || "";
   if (beepStyleSelect) beepStyleSelect.value = state.data.settings.beepStyle || "classic";
 
-  // Drawer
+  // Menu latéral
   hamburgerBtn?.addEventListener("click", toggleDrawer);
   closeDrawerBtn?.addEventListener("click", closeDrawer);
   drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
   enableDrawerSwipe(); enableEdgeOpen();
 
-  // Global “close-all overlays” in capture
+  // Fermer les overlays globalement
   ["pointerdown","click"].forEach(ev=>{
     document.addEventListener(ev,(e)=>{
       const t=e.target;
@@ -110,7 +110,7 @@ function init(){
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllOverlays(); });
   ["scroll","resize"].forEach(ev=> window.addEventListener(ev, ()=>{ viewMenu.hidden = true; }, {passive:true}));
 
-  // Years
+  // Années
   addYearBtn?.addEventListener("click", ()=>{
     yearInput.value = String(new Date().getFullYear()+1);
     openDialog(yearModal);
@@ -118,25 +118,25 @@ function init(){
   yearForm?.addEventListener("submit",(e)=>{
     e.preventDefault();
     const y = (yearInput.value||"").trim();
-    if(!/^[0-9]{4}$/.test(y)){ alert("Invalid year"); return; }
+    if(!/^[0-9]{4}$/.test(y)){ alert("Année invalide"); return; }
     ensureYear(y); state.currentYear = y; state.selectedDate = `${y}-01-01`;
     state.view="calendar"; yearModal.close(); render();
   });
 
-  // Tools
+  // Outils
   backupBtn?.addEventListener("click", exportBackupJSON);
   restoreInput?.addEventListener("change", importBackupJSON);
   exportYearBtn?.addEventListener("click", exportYearICS);
 
-  // Home + FAB
+  // Accueil + FAB
   addItemLargeBtn?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
   addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
 
-  // View menu
+  // Menu de vue
   viewModeBtn?.addEventListener("click", ()=>{
     if(state.view!=="calendar") return;
     const open=!(!viewMenu.hidden);
-    viewMenu.hidden = open; // toggle
+    viewMenu.hidden = open;
     viewModeBtn.setAttribute("aria-expanded", String(!open));
   });
   viewMenu?.addEventListener("click",(e)=>{
@@ -146,13 +146,13 @@ function init(){
       const y=new Date().getFullYear();
       state.selectedDate = (String(y)===state.currentYear) ? todayISO() : `${state.currentYear}-01-01`;
     }
-    viewModeBtn.textContent = state.viewMode==="day" ? "Day ▾" : state.viewMode==="week" ? "Week ▾" : "Month ▾";
+    viewModeBtn.textContent = state.viewMode==="day" ? "Jour ▾" : state.viewMode==="week" ? "Semaine ▾" : "Mois ▾";
     viewMenu.hidden=true; render();
   });
 
   enableCalendarSwipe();
 
-  // Settings
+  // Réglages
   openSettingsBtn?.addEventListener("click", ()=>{
     openDialog(settingsModal);
     requestAnimationFrame(()=> saveSettingsBtn?.focus({preventScroll:true}) );
@@ -167,7 +167,7 @@ function init(){
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // Backdrop click closes dialogs (incl. onboarding)
+  // Backdrop → fermeture (incl. onboarding)
   [itemModal, yearModal, settingsModal, onboardingModal].forEach(dlg=>{
     dlg?.addEventListener("click",(e)=>{ if(e.target === dlg){ dlg.close("cancel"); if(dlg===onboardingModal){ markOnboardingSeen(); } }});
   });
@@ -184,7 +184,7 @@ function init(){
   applyTheme(state.data.settings.theme || "nocturne");
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
 
-  // Onboarding: show once (first run)
+  // Onboarding : afficher une seule fois
   setupOnboarding();
   if(!state.data.onboardingSeen){
     openOnboarding();
@@ -193,7 +193,7 @@ function init(){
   render();
 }
 
-/* -------------------- DIALOG HELPER -------------------- */
+/* -------------------- DIALOGUES -------------------- */
 function openDialog(dlg){
   [settingsModal, itemModal, yearModal, onboardingModal].forEach(m => {
     if (m && m !== dlg && m.open) m.close();
@@ -209,7 +209,7 @@ function closeAllOverlays(){
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
-/* -------------------- DATA -------------------- */
+/* -------------------- DONNÉES -------------------- */
 function ensureYear(y){ if(!state.data.years[y]) state.data.years[y] = { items:[], lastModified: Date.now() }; }
 function save(){
   const y=state.currentYear;
@@ -217,7 +217,7 @@ function save(){
   localStorage.setItem("planningData", JSON.stringify(state.data));
 }
 
-/* -------------------- RENDER -------------------- */
+/* -------------------- RENDU -------------------- */
 function render(){
   renderYearList();
 
@@ -230,13 +230,13 @@ function render(){
       state.selectedDate = todayISO();
     }
     const d=new Date(state.selectedDate);
-    topTitle.textContent = `Calendar ${state.currentYear}`;
-    calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})
+    topTitle.textContent = `Calendrier ${state.currentYear}`;
+    calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"})
                      : state.viewMode==="week" ? weekLabel(d)
                      : monthLabel(d);
     viewModeBtn.hidden=false;
   }else{
-    topTitle.textContent="Home";
+    topTitle.textContent="Accueil";
     viewModeBtn.hidden=true; viewMenu.hidden=true;
   }
 
@@ -248,7 +248,7 @@ function renderYearList(){
   Object.keys(state.data.years).sort().forEach(y=>{
     const b=document.createElement("button");
     b.className="btn btn--ghost";
-    b.textContent=`Calendar ${y}` + (y===state.currentYear?" •":"");
+    b.textContent=`Calendrier ${y}` + (y===state.currentYear?" •":"");
     b.addEventListener("click", ()=>{
       state.currentYear=y; state.view="calendar";
       state.selectedDate = (String(new Date().getFullYear())===y) ? todayISO() : `${y}-01-01`;
@@ -275,7 +275,7 @@ function renderCalendar(){
     for(let i=0;i<7;i++){
       const day=addDays(start,i);
       const col=document.createElement("div"); col.className="week-col";
-      const h4=document.createElement("h4"); h4.textContent = day.toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
+      const h4=document.createElement("h4"); h4.textContent = day.toLocaleDateString("fr-FR",{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
       const dayItems=items.filter(it=>it.date===isoDate(day)).sort(sortByDateTime);
       if(dayItems.length===0){ const p=document.createElement("p"); p.className="muted"; p.textContent="—"; col.appendChild(p); }
       else dayItems.forEach(it=> col.appendChild(itemCard(it)));
@@ -293,7 +293,7 @@ function renderCalendar(){
       const head=document.createElement("div"); head.className="d"; head.textContent=day.getDate(); cell.appendChild(head);
       const dayItems=items.filter(it=>it.date===isoDate(day));
       if(dayItems.length){ const dots=document.createElement("div"); dayItems.slice(0,5).forEach(()=>{ const dot=document.createElement("span"); dot.className="dot"; dots.appendChild(dot); }); cell.appendChild(dots); }
-      cell.addEventListener("click", ()=>{ state.viewMode="day"; state.selectedDate=isoDate(day); viewModeBtn.textContent="Day ▾"; render(); });
+      cell.addEventListener("click", ()=>{ state.viewMode="day"; state.selectedDate=isoDate(day); viewModeBtn.textContent="Jour ▾"; render(); });
       grid.appendChild(cell);
     }
     calContent.appendChild(grid);
@@ -308,15 +308,15 @@ function itemCard(it){
     </div>
     ${it.notes?`<div class="card-notes">${escapeHTML(it.notes)}</div>`:""}
     <div class="card-actions">
-      <button class="mini-btn edit">Edit</button>
-      <button class="mini-btn danger delete">Delete</button>
+      <button class="mini-btn edit">Modifier</button>
+      <button class="mini-btn danger delete">Supprimer</button>
     </div>`;
   a.querySelector(".edit").addEventListener("click", ()=>{ openItemModal(it); });
   a.querySelector(".delete").addEventListener("click", ()=> deleteItem(it.id));
   return a;
 }
 
-/* -------------------- GESTURES -------------------- */
+/* -------------------- GESTES -------------------- */
 function enableCalendarSwipe(){
   let sx=0, sy=0, dragging=false;
   calContent.addEventListener("touchstart",(e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; },{passive:true});
@@ -342,7 +342,7 @@ function enableEdgeOpen(){
   edgeOpener.addEventListener("touchend",()=>pulling=false);
 }
 
-/* -------------------- DRAWER -------------------- */
+/* -------------------- MENU -------------------- */
 function toggleDrawer(){ drawer.classList.toggle("open"); hamburgerBtn.setAttribute("aria-expanded", drawer.classList.contains("open")); drawer.setAttribute("aria-hidden", String(!drawer.classList.contains("open"))); }
 function openDrawer(){ drawer.classList.add("open"); hamburgerBtn.setAttribute("aria-expanded","true"); drawer.setAttribute("aria-hidden","false"); }
 function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribute("aria-expanded","false"); drawer.setAttribute("aria-hidden","true"); }
@@ -350,7 +350,7 @@ function closeDrawer(){ drawer.classList.remove("open"); hamburgerBtn.setAttribu
 /* -------------------- CRUD -------------------- */
 itemForm.addEventListener("submit", onSaveItem);
 function openItemModal(item={}){
-  modalTitle.textContent = item.id ? "Edit slot" : "New slot";
+  modalTitle.textContent = item.id ? "Modifier le créneau" : "Nouveau créneau";
   itemIdInput.value = item.id || "";
   itemTitleInput.value = item.title || "";
   itemDateInput.value = item.date || state.selectedDate;
@@ -362,14 +362,14 @@ function onSaveItem(e){
   e.preventDefault();
   const id = itemIdInput.value || uid();
   const payload = { id, title:(itemTitleInput.value||"").trim(), date:itemDateInput.value || todayISO(), time:itemTimeInput.value||"", notes:(itemNotesInput.value||"").trim(), createdAt: Date.now() };
-  if(!payload.title){ alert("Please add a title (or tap outside to close)."); return; }
+  if(!payload.title){ alert("Ajoutez un titre (ou touchez à l’extérieur pour fermer)."); return; }
   const list = state.data.years[state.currentYear].items;
   const idx = list.findIndex(x=>x.id===id);
   if(idx>=0){ payload.createdAt=list[idx].createdAt; list[idx]=payload; } else list.push(payload);
   save(); itemModal.close(); state.selectedDate = payload.date; state.view = "calendar"; render();
 }
 function deleteItem(id){
-  if(!confirm("Delete this slot?")) return;
+  if(!confirm("Supprimer ce créneau ?")) return;
   const list = state.data.years[state.currentYear].items;
   const idx = list.findIndex(x=>x.id===id);
   if(idx>=0) list.splice(idx,1);
@@ -377,17 +377,17 @@ function deleteItem(id){
 }
 
 /* -------------------- IMPORT/EXPORT/ICS -------------------- */
-function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}),"planis-backup.json"); }
+function exportBackupJSON(){ download(new Blob([JSON.stringify(state.data,null,2)],{type:"application/json"}),"planis-sauvegarde.json"); }
 function importBackupJSON(e){
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ const obj=JSON.parse(r.result); if(!obj||typeof obj!=="object") throw new Error("Invalid file"); state.data=obj; ensureYear(state.currentYear); save(); render(); alert("Backup restored."); }catch(err){ alert("Restore failed: "+err.message); } };
+  r.onload=()=>{ try{ const obj=JSON.parse(r.result); if(!obj||typeof obj!=="object") throw new Error("Fichier invalide"); state.data=obj; ensureYear(state.currentYear); save(); render(); alert("Sauvegarde restaurée."); }catch(err){ alert("Restauration impossible : "+err.message); } };
   r.readAsText(f);
 }
 function exportYearICS(){
   const y = state.currentYear;
   const items = [...state.data.years[y].items].sort(sortByDateTime);
-  if(items.length===0){ alert("No slot in "+y); return; }
+  if(items.length===0){ alert("Aucun créneau en "+y); return; }
   const now = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
   const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//","CALSCALE:GREGORIAN","METHOD:PUBLISH",
     "BEGIN:VTIMEZONE","TZID:Europe/Paris","X-LIC-LOCATION:Europe/Paris",
@@ -403,37 +403,37 @@ function exportYearICS(){
   download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),`planis-${y}.ics`);
 }
 
-/* Daily reminder ICS */
+/* Rappel quotidien (.ics) */
 function createDailyReminderICS(){
   const time = (reminderTimeSettings?.value || "21:00").replace(":", "") + "00";
   const today = new Date();
   const dtstart = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,"0")}${String(today.getDate()).padStart(2,"0")}T${time}`;
   const now = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
   const lines = [
-    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//EN",
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Planis//FR",
     "CALSCALE:GREGORIAN","METHOD:PUBLISH",
     "BEGIN:VEVENT",
     "UID:daily-reminder@planis",
     "DTSTAMP:"+now,
     "DTSTART;TZID=Europe/Paris:"+dtstart,
     "RRULE:FREQ=DAILY",
-    "SUMMARY:Planis — Check tomorrow's planning",
-    "BEGIN:VALARM","ACTION:AUDIO","TRIGGER:-PT1M","DESCRIPTION:Planis reminder","END:VALARM",
+    "SUMMARY:Planis — Vérifier le planning de demain",
+    "BEGIN:VALARM","ACTION:AUDIO","TRIGGER:-PT1M","DESCRIPTION:Rappel Planis","END:VALARM",
     "END:VEVENT","END:VCALENDAR"
   ];
-  download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),"planis-daily-reminder.ics");
+  download(new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"}),"planis-rappel-quotidien.ics");
 }
 
 /* -------------------- ONBOARDING -------------------- */
 function setupOnboarding(){
   if(!onboardingModal) return;
-  // dots
+  // points
   const slides = Array.from(obTrack?.children || []);
   obDots.innerHTML = "";
   slides.forEach((_,i)=>{
     const b=document.createElement("button");
     b.type="button";
-    b.setAttribute("aria-label", `Go to slide ${i+1}`);
+    b.setAttribute("aria-label", `Aller à la diapositive ${i+1}`);
     b.addEventListener("click", ()=> obGo(i));
     obDots.appendChild(b);
   });
@@ -467,14 +467,14 @@ function obGo(n){
   const max = slides.length-1;
   state.onboardingIndex = Math.max(0, Math.min(max, n));
   obTrack.style.transform = `translateX(-${state.onboardingIndex*100}%)`;
-  // dots
+  // points
   Array.from(obDots.children).forEach((d,i)=> d.setAttribute("aria-current", i===state.onboardingIndex ? "true" : "false"));
-  // buttons
+  // boutons
   obBack.disabled = state.onboardingIndex===0;
-  obNext.textContent = state.onboardingIndex===max ? "Got it" : "Next";
+  obNext.textContent = state.onboardingIndex===max ? "J’ai compris" : "Suivant";
 }
 
-/* -------------------- UTILS -------------------- */
+/* -------------------- OUTILS -------------------- */
 function uid(){ return cryptoRandom(16); }
 function cryptoRandom(len=16){ const a=new Uint8Array(len); (self.crypto||window.crypto).getRandomValues(a); return Array.from(a).map(b=>b.toString(16).padStart(2,"0")).join(""); }
 function todayISO(){ const d=new Date(); return isoDate(d); }
@@ -484,8 +484,8 @@ function addMonths(d,n){ const x=new Date(d); x.setMonth(x.getMonth()+n); return
 function weekStart(d){ const x=new Date(d); const wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return x; }
 function sortByDateTime(a,b){ const A=a.date+(a.time||""); const B=b.date+(b.time||""); return A<B?-1:A>B?1:0; }
 function escapeHTML(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
-function weekLabel(d){ const start=weekStart(d), end=addDays(start,6); const s=start.toLocaleDateString("en-US",{day:"2-digit",month:"short"}); const e=end.toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}); return "Week "+s+" – "+e; }
-function monthLabel(d){ return d.toLocaleDateString("en-US",{month:"long",year:"numeric"}); }
+function weekLabel(d){ const start=weekStart(d), end=addDays(start,6); const s=start.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}); const e=end.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}); return "Semaine "+s+" – "+e; }
+function monthLabel(d){ return d.toLocaleDateString("fr-FR",{month:"long",year:"numeric"}); }
 function icsEscape(s){ return (s||"").replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,|;/g, m=>m===","?"\\,":"\\;"); }
 function download(blob,filename){ const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },0); }
 function applyTheme(name){
@@ -509,5 +509,5 @@ function playBeep(){
       case "bell": tone(660,"triangle",0,0.40,0.24); tone(1320,"sine",0,0.25,0.10); break;
       case "click": click(); break;
       case "sweep": sweep(500,1400,0.45); break; }
-  }catch(e){ console.warn("Audio not available", e); }
+  }catch(e){ console.warn("Audio indisponible", e); }
 }

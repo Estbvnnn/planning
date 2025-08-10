@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
@@ -12,120 +12,120 @@
   <title>Planis</title>
 
   <!-- cache-bust -->
-  <link rel="stylesheet" href="styles.css?v=27">
-  <script src="app.js?v=27" defer></script>
+  <link rel="stylesheet" href="styles.css?v=28">
+  <script src="app.js?v=28" defer></script>
 </head>
 <body>
 
   <!-- zone tactile d’ouverture par “edge swipe” -->
   <div id="edgeOpener" aria-hidden="true"></div>
 
-  <!-- Top bar -->
+  <!-- Barre du haut -->
   <header class="topbar">
-    <button id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" class="hamburger">
+    <button id="hamburgerBtn" aria-label="Ouvrir le menu" aria-expanded="false" class="hamburger">
       <span></span><span></span><span></span>
     </button>
-    <div id="topTitle" class="top-title">Home</div>
+    <div id="topTitle" class="top-title">Accueil</div>
     <div class="top-actions">
-      <button id="viewModeBtn" class="chip" hidden>Day ▾</button>
-      <button id="installBtn" class="install-btn" hidden>Install</button>
+      <button id="viewModeBtn" class="chip" hidden>Jour ▾</button>
+      <button id="installBtn" class="install-btn" hidden>Installer</button>
     </div>
   </header>
 
-  <!-- Drawer (menu latéral) -->
+  <!-- Menu latéral -->
   <aside id="drawer" class="drawer" aria-hidden="true">
     <div class="drawer-header">
       <img src="icons/icon-192.png" alt="Planis" class="brand-logo" />
-      <button id="closeDrawerBtn" class="icon-btn" aria-label="Close menu">✕</button>
+      <button id="closeDrawerBtn" class="icon-btn" aria-label="Fermer le menu">✕</button>
     </div>
 
     <section class="drawer-section">
-      <div class="section-title">Years</div>
+      <div class="section-title">Années</div>
       <ul id="yearList" class="year-list"></ul>
-      <button id="addYearBtn" class="btn btn--solid">+ Add a year</button>
+      <button id="addYearBtn" class="btn btn--solid">+ Ajouter une année</button>
     </section>
 
-    <!-- Tools : boutons plus compacts -->
+    <!-- Outils -->
     <section class="drawer-section tools">
-      <div class="section-title">Tools</div>
-      <p class="caption">Backup & restore your data (JSON).</p>
+      <div class="section-title">Outils</div>
+      <p class="caption">Sauvegarde & restauration locales (JSON).</p>
       <div class="stack">
-        <button id="backupBtn" class="btn btn--ghost btn--compact">Export backup (.json)</button>
+        <button id="backupBtn" class="btn btn--ghost btn--compact">Exporter sauvegarde (.json)</button>
         <label class="btn btn--outline btn--compact file-btn">
           <input id="restoreInput" type="file" accept="application/json" />
-          Import backup (.json)
+          Importer sauvegarde (.json)
         </label>
       </div>
     </section>
 
-    <!-- Settings tout en bas -->
+    <!-- Réglages tout en bas -->
     <div class="drawer-footer">
-      <button id="openSettingsBtn" class="btn btn--outline btn--compact">⚙ Settings</button>
-      <div class="drawer-footnote">Ultra minimal. Offline. PWA.</div>
+      <button id="openSettingsBtn" class="btn btn--outline btn--compact">⚙ Réglages</button>
+      <div class="drawer-footnote">Ultra minimal. Hors-ligne. PWA.</div>
     </div>
   </aside>
 
-  <!-- View mode dropdown -->
+  <!-- Menu de vue -->
   <div id="viewMenu" class="menu" hidden>
-    <button type="button" data-view="day">Day</button>
-    <button type="button" data-view="week">Week</button>
-    <button type="button" data-view="month">Month</button>
+    <button type="button" data-view="day">Jour</button>
+    <button type="button" data-view="week">Semaine</button>
+    <button type="button" data-view="month">Mois</button>
   </div>
 
-  <!-- Home -->
+  <!-- Accueil -->
   <main id="homeSection" class="home">
-    <button id="addItemLargeBtn" class="big-plus" aria-label="Add a slot">+</button>
-    <p class="muted muted-narrow">Tap “+” to add your first slot.</p>
+    <button id="addItemLargeBtn" class="big-plus" aria-label="Ajouter un créneau">+</button>
+    <p class="muted muted-narrow">Touchez « + » pour créer votre premier créneau.</p>
   </main>
 
-  <!-- Calendar -->
+  <!-- Calendrier -->
   <main id="calendarSection" class="calendar" hidden>
     <div class="cal-header">
       <div id="calLabel" class="cal-label"></div>
       <div class="cal-actions">
         <button id="exportYearBtn" class="chip ghost">.ics</button>
-        <button id="addItemFab" class="fab" aria-label="Add slot">+</button>
+        <button id="addItemFab" class="fab" aria-label="Ajouter un créneau">+</button>
       </div>
     </div>
     <div id="calContent" class="cal-content"></div>
   </main>
 
-  <!-- New/Edit item -->
+  <!-- Nouveau / éditer un créneau -->
   <dialog id="itemModal" class="modal">
     <div class="modal-card">
-      <h3 id="modalTitle">New slot</h3>
+      <h3 id="modalTitle">Nouveau créneau</h3>
       <form id="itemForm" class="form">
         <input id="itemId" type="hidden" />
         <div class="field">
-          <label for="itemTitle">Title</label>
-          <input id="itemTitle" type="text" placeholder="e.g. Meeting" autocomplete="off" />
+          <label for="itemTitle">Titre</label>
+          <input id="itemTitle" type="text" placeholder="ex. Réunion" autocomplete="off" />
         </div>
         <div class="field">
           <label for="itemDate">Date</label>
           <input id="itemDate" type="date" />
         </div>
         <div class="field">
-          <label for="itemTime">Time (optional)</label>
+          <label for="itemTime">Heure (optionnel)</label>
           <input id="itemTime" type="time" />
         </div>
         <div class="field">
           <label for="itemNotes">Notes</label>
-          <textarea id="itemNotes" rows="4" placeholder="Details (optional)"></textarea>
+          <textarea id="itemNotes" rows="4" placeholder="Détails (optionnel)"></textarea>
         </div>
         <div class="actions">
-          <button type="submit" class="btn btn--solid">Save</button>
+          <button type="submit" class="btn btn--solid">Enregistrer</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- Settings -->
+  <!-- Réglages -->
   <dialog id="settingsModal" class="modal">
     <div class="modal-card">
-      <h3>Settings</h3>
+      <h3>Réglages</h3>
 
       <div class="field">
-        <label for="themeSelect">Theme</label>
+        <label for="themeSelect">Thème</label>
         <select id="themeSelect">
           <option value="nocturne" selected>Nocturne</option>
           <option value="ardoise">Ardoise</option>
@@ -134,91 +134,91 @@
       </div>
 
       <div class="field">
-        <label for="reminderTimeSettings">Daily reminder (time)</label>
+        <label for="reminderTimeSettings">Rappel quotidien (heure)</label>
         <input id="reminderTimeSettings" type="time" />
       </div>
 
       <div class="field">
-        <label for="beepStyleSelect">Beep style</label>
+        <label for="beepStyleSelect">Style de bip</label>
         <select id="beepStyleSelect">
-          <option value="classic">Classic</option>
-          <option value="chime">Chime</option>
-          <option value="bell">Bell</option>
-          <option value="click">Click</option>
-          <option value="sweep">Sweep</option>
+          <option value="classic">Classique</option>
+          <option value="chime">Carillon</option>
+          <option value="bell">Cloche</option>
+          <option value="click">Clic</option>
+          <option value="sweep">Balayage</option>
         </select>
       </div>
 
       <div class="stack" style="margin-top:10px">
-        <button id="testBeepBtn" class="btn btn--ghost" type="button">Test beep</button>
-        <button id="makeICSFromSettingsBtn" class="btn btn--outline" type="button">Create calendar reminder (.ics)</button>
+        <button id="testBeepBtn" class="btn btn--ghost" type="button">Tester le bip</button>
+        <button id="makeICSFromSettingsBtn" class="btn btn--outline" type="button">Créer un rappel calendrier (.ics)</button>
       </div>
 
       <div class="actions">
-        <button id="saveSettingsBtn" class="btn btn--solid" type="button">Save</button>
+        <button id="saveSettingsBtn" class="btn btn--solid" type="button">Enregistrer</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Add year -->
+  <!-- Ajouter une année -->
   <dialog id="yearModal" class="modal">
     <div class="modal-card">
-      <h3>Add a year</h3>
+      <h3>Ajouter une année</h3>
       <form id="yearForm" class="form">
         <div class="field">
-          <label for="yearInput">Year</label>
+          <label for="yearInput">Année</label>
           <input id="yearInput" type="number" inputmode="numeric" min="1970" max="2099" />
         </div>
         <div class="actions">
-          <button type="submit" class="btn btn--solid">Add</button>
+          <button type="submit" class="btn btn--solid">Ajouter</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- Onboarding (first run only) -->
-  <dialog id="onboardingModal" class="modal ob-modal" aria-label="Welcome to Planis">
+  <!-- Onboarding (premier lancement) -->
+  <dialog id="onboardingModal" class="modal ob-modal" aria-label="Bienvenue dans Planis">
     <div class="modal-card ob-card">
       <div class="ob-track" id="obTrack">
-        <!-- Slide 1 -->
+        <!-- Diapo 1 -->
         <section class="ob-slide">
           <div class="ob-hero">✨</div>
-          <h3>Welcome to Planis</h3>
-          <p class="muted">A clean, offline-first planner. Install it and you’re ready.</p>
+          <h3>Bienvenue dans Planis</h3>
+          <p class="muted">Un planning épuré, hors-ligne. Installez l’app et c’est parti.</p>
         </section>
-        <!-- Slide 2 -->
+        <!-- Diapo 2 -->
         <section class="ob-slide">
           <div class="ob-hero">📅</div>
-          <h3>Create a year</h3>
-          <p class="muted">Open the menu (≡) → “+ Add a year”, then pick your calendar.</p>
+          <h3>Créez une année</h3>
+          <p class="muted">Ouvrez le menu (≡) → « + Ajouter une année », puis choisissez votre calendrier.</p>
         </section>
-        <!-- Slide 3 -->
+        <!-- Diapo 3 -->
         <section class="ob-slide">
           <div class="ob-hero">➕</div>
-          <h3>Add your first slot</h3>
-          <p class="muted">Tap the “+” button, enter Title/Date, and Save. Easy.</p>
+          <h3>Ajoutez un créneau</h3>
+          <p class="muted">Touchez « + », entrez Titre/Date, puis Enregistrer. Simple.</p>
         </section>
-        <!-- Slide 4 -->
+        <!-- Diapo 4 -->
         <section class="ob-slide">
           <div class="ob-hero">👆</div>
-          <h3>Navigate fast</h3>
-          <p class="muted">Use Day / Week / Month. Swipe left/right to move through time.</p>
+          <h3>Naviguez vite</h3>
+          <p class="muted">Jour / Semaine / Mois. Glissez à gauche/droite pour changer de période.</p>
         </section>
-        <!-- Slide 5 -->
+        <!-- Diapo 5 -->
         <section class="ob-slide">
           <div class="ob-hero">🔔</div>
-          <h3>Daily reminder</h3>
-          <p class="muted">Settings → create a .ics reminder for a daily “bip” at your time.</p>
+          <h3>Rappel quotidien</h3>
+          <p class="muted">Réglages → créez un .ics pour un bip chaque jour à votre heure.</p>
         </section>
       </div>
 
-      <div class="ob-dots" id="obDots" aria-label="Slides progress"></div>
+      <div class="ob-dots" id="obDots" aria-label="Progression des diapositives"></div>
 
       <div class="ob-controls">
-        <button id="obSkip" class="btn btn--outline">Skip</button>
+        <button id="obSkip" class="btn btn--outline">Passer</button>
         <div class="ob-spacer"></div>
-        <button id="obBack" class="btn btn--outline" disabled>Back</button>
-        <button id="obNext" class="btn btn--solid">Next</button>
+        <button id="obBack" class="btn btn--outline" disabled>Précédent</button>
+        <button id="obNext" class="btn btn--solid">Suivant</button>
       </div>
     </div>
   </dialog>
