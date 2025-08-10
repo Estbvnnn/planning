@@ -1,14 +1,13 @@
-// Planis v6.3.7 — close-all overlays (drawer/view menu) when opening any modal
+// Planis v6.3.8 — iPhone modal paddings + close overlays robust
 const $  = (q, r=document) => r.querySelector(q);
-const $$ = (q, r=document) => Array.from(r.querySelectorAll(q));
 
 /* -------- STATE -------- */
 const state = {
   data: null,
   get currentYear(){ return this.data.currentYear || String(new Date().getFullYear()); },
   set currentYear(y){ this.data.currentYear = y; save(); render(); },
-  view: "home",            // "home" | "calendar"
-  viewMode: "day",         // "day" | "week" | "month"
+  view: "home",          // "home" | "calendar"
+  viewMode: "day",       // "day" | "week" | "month"
   selectedDate: todayISO()
 };
 
@@ -74,108 +73,102 @@ function init(){
   }
   ensureYear(state.currentYear);
 
-  /* Drawer + gestures */
+  // Drawer
   hamburgerBtn?.addEventListener("click", toggleDrawer);
   closeDrawerBtn?.addEventListener("click", closeDrawer);
   drawer?.addEventListener("click", (e)=>{ if(e.target === drawer) closeDrawer(); });
   enableDrawerSwipe(); enableEdgeOpen();
 
-  /* Close overlays on ESC */
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape"){ closeAllOverlays(); }
+  // Global “close-all overlays” in capture
+  ["pointerdown","click"].forEach(ev=>{
+    document.addEventListener(ev,(e)=>{
+      const t=e.target;
+      if(drawer && !drawer.contains(t) && t!==hamburgerBtn) closeDrawer();
+      if(!viewMenu.hidden && !viewMenu.contains(t) && t!==viewModeBtn){
+        viewMenu.hidden = true; viewModeBtn?.setAttribute("aria-expanded","false");
+      }
+    }, true);
   });
 
-  /* Close view menu on any scroll or resize (more robust) */
+  // ESC closes overlays
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllOverlays(); });
+
+  // Close view menu on scroll/resize
   ["scroll","resize"].forEach(ev=> window.addEventListener(ev, ()=>{ viewMenu.hidden = true; }, {passive:true}));
 
-  /* Years */
+  // Years
   addYearBtn?.addEventListener("click", ()=>{
     closeAllOverlays();
     yearInput.value = String(new Date().getFullYear()+1);
     yearModal.showModal();
   });
-  yearForm?.addEventListener("submit", (e)=>{
+  yearForm?.addEventListener("submit",(e)=>{
     e.preventDefault();
     const y = (yearInput.value||"").trim();
     if(!/^[0-9]{4}$/.test(y)){ alert("Invalid year"); return; }
-    ensureYear(y);
-    state.currentYear = y;
-    state.selectedDate = `${y}-01-01`;
-    state.view = "calendar";
-    yearModal.close(); closeAllOverlays(); render();
+    ensureYear(y); state.currentYear = y; state.selectedDate = `${y}-01-01`;
+    state.view="calendar"; yearModal.close(); render();
   });
 
-  /* Tools */
+  // Tools
   backupBtn?.addEventListener("click", exportBackupJSON);
   restoreInput?.addEventListener("change", importBackupJSON);
   exportYearBtn?.addEventListener("click", exportYearICS);
 
-  /* Home */
-  addItemLargeBtn?.addEventListener("click", ()=>{
-    closeAllOverlays();
-    openItemModal({date: state.selectedDate});
-  });
+  // Home
+  addItemLargeBtn?.addEventListener("click", ()=>{ closeAllOverlays(); openItemModal({date: state.selectedDate}); });
 
-  /* Calendar */
-  addItemFab?.addEventListener("click", ()=>{
-    closeAllOverlays();
-    openItemModal({date: state.selectedDate});
-  });
+  // Calendar FAB
+  addItemFab?.addEventListener("click", ()=> openItemModal({date: state.selectedDate}) );
 
-  /* View menu */
+  // View menu
   viewModeBtn?.addEventListener("click", ()=>{
-    if(state.view !== "calendar") return;
-    const open = viewMenu.hidden;
-    viewMenu.hidden = !open;
+    if(state.view!=="calendar") return;
+    const open=viewMenu.hidden;
+    viewMenu.hidden=!open;
     viewModeBtn.setAttribute("aria-expanded", String(open));
   });
-  viewMenu?.addEventListener("click", (e)=>{
-    const btn = e.target.closest("button[data-view]");
-    if(!btn) return;
+  viewMenu?.addEventListener("click",(e)=>{
+    const btn = e.target.closest("button[data-view]"); if(!btn) return;
     state.viewMode = btn.dataset.view;
     if(state.viewMode==="day"){
-      const y = new Date().getFullYear();
+      const y=new Date().getFullYear();
       state.selectedDate = (String(y)===state.currentYear) ? todayISO() : `${state.currentYear}-01-01`;
     }
     viewModeBtn.textContent = state.viewMode==="day" ? "Day ▾" : state.viewMode==="week" ? "Week ▾" : "Month ▾";
-    viewMenu.hidden = true;
-    render();
-  });
-  document.addEventListener("click", (e)=>{
-    if(!viewMenu.hidden && !viewMenu.contains(e.target) && e.target !== viewModeBtn){
-      viewMenu.hidden = true;
-    }
+    viewMenu.hidden=true; render();
   });
 
   enableCalendarSwipe();
 
-  /* Settings */
+  // Settings
   openSettingsBtn?.addEventListener("click", ()=>{
-    closeAllOverlays();
-    settingsModal.showModal();
-    requestAnimationFrame(()=>{ saveSettingsBtn?.focus({preventScroll:true}); });
+    closeAllOverlays(); settingsModal.showModal();
+    requestAnimationFrame(()=> saveSettingsBtn?.focus({preventScroll:true}) );
   });
-  saveSettingsBtn?.addEventListener("click", (e)=>{
+  saveSettingsBtn?.addEventListener("click",(e)=>{
     e.preventDefault();
     state.data.settings.theme = themeSelect?.value || "nocturne";
     state.data.settings.reminderTime = reminderTimeSettings?.value || "21:00";
     state.data.settings.beepStyle = beepStyleSelect?.value || "classic";
     save(); applyTheme(state.data.settings.theme); settingsModal.close();
-    closeAllOverlays();
   });
   testBeepBtn?.addEventListener("click", playBeep);
   makeICSFromSettingsBtn?.addEventListener("click", createDailyReminderICS);
 
-  // Backdrop close for all dialogs
+  // Backdrop click closes all dialogs
   [itemModal, yearModal, settingsModal].forEach(dlg=>{
     dlg?.addEventListener("click",(e)=>{ if(e.target === dlg) dlg.close("cancel"); });
-    dlg?.addEventListener("close", ()=> { viewMenu.hidden = true; }); // safety
   });
 
-  /* PWA install */
-  let deferredInstallPrompt = null;
-  window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredInstallPrompt = e; installBtn.hidden=false; });
-  installBtn?.addEventListener("click", async ()=>{ if(!deferredInstallPrompt) return; deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt=null; installBtn.hidden=true; });
+  // PWA install
+  let deferredInstallPrompt=null;
+  window.addEventListener("beforeinstallprompt",(e)=>{ e.preventDefault(); deferredInstallPrompt=e; installBtn.hidden=false; });
+  installBtn?.addEventListener("click", async ()=>{
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt=null; installBtn.hidden=true;
+  });
 
   applyTheme(state.data.settings.theme || "nocturne");
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("./service-worker.js").catch(console.error); }
@@ -183,11 +176,10 @@ function init(){
   render();
 }
 
-/* -------- HELPERS TO CLOSE THINGS -------- */
+/* -------- HELPERS -------- */
 function closeAllOverlays(){
   viewMenu.hidden = true;
-  closeDrawer();
-  // blur focus (ferme les menus natifs des <select> sur iOS)
+  drawer?.classList.remove("open");
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
@@ -199,85 +191,78 @@ function save(){ const y=state.currentYear; if(state.data.years[y]) state.data.y
 function render(){
   renderYearList();
 
-  const onCalendar = (state.view === "calendar");
-  $("#homeSection").hidden     =  onCalendar;
-  $("#calendarSection").hidden = !onCalendar;
+  const onCal = (state.view==="calendar");
+  homeSection.hidden = onCal;
+  calendarSection.hidden = !onCal;
 
-  if(onCalendar){
-    if(state.viewMode==="day" && state.currentYear === String(new Date().getFullYear())){
+  if(onCal){
+    if(state.viewMode==="day" && state.currentYear===String(new Date().getFullYear())){
       state.selectedDate = todayISO();
     }
-    const d = new Date(state.selectedDate);
+    const d=new Date(state.selectedDate);
     topTitle.textContent = `Calendar ${state.currentYear}`;
     calLabel.textContent = state.viewMode==="day" ? d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})
-                      : state.viewMode==="week" ? weekLabel(d)
-                      : monthLabel(d);
-    viewModeBtn.hidden = false;
+                     : state.viewMode==="week" ? weekLabel(d)
+                     : monthLabel(d);
+    viewModeBtn.hidden=false;
   }else{
-    topTitle.textContent = "Home";
-    viewModeBtn.hidden = true; viewMenu.hidden = true;
+    topTitle.textContent="Home";
+    viewModeBtn.hidden=true; viewMenu.hidden=true;
   }
 
-  if(onCalendar) renderCalendar();
+  if(onCal) renderCalendar();
 }
 
 function renderYearList(){
-  yearList.innerHTML = "";
+  yearList.innerHTML="";
   Object.keys(state.data.years).sort().forEach(y=>{
-    const btn = document.createElement("button");
-    btn.className = "btn btn--ghost";
-    btn.textContent = `Calendar ${y}` + (y===state.currentYear ? " •" : "");
-    btn.addEventListener("click", ()=>{
-      state.currentYear = y;
-      state.view = "calendar";
+    const b=document.createElement("button");
+    b.className="btn btn--ghost";
+    b.textContent=`Calendar ${y}` + (y===state.currentYear?" •":"");
+    b.addEventListener("click", ()=>{
+      state.currentYear=y; state.view="calendar";
       state.selectedDate = (String(new Date().getFullYear())===y) ? todayISO() : `${y}-01-01`;
       closeAllOverlays(); render();
     });
-    yearList.appendChild(btn);
+    yearList.appendChild(b);
   });
 }
 
 function renderCalendar(){
   const items = state.data.years[state.currentYear].items;
-  calContent.innerHTML = "";
-  const d = new Date(state.selectedDate);
+  calContent.innerHTML="";
+  const d=new Date(state.selectedDate);
 
   if(state.viewMode==="day"){
-    const list = document.createElement("div");
-    list.className = "day-list";
-    const todays = items.filter(it => it.date === isoDate(d)).sort(sortByDateTime);
-    if(todays.length===0){
-      const p=document.createElement("p"); p.className="muted"; p.textContent = "—"; list.appendChild(p);
-    }else{
-      todays.forEach(it=> list.appendChild(itemCard(it)));
-    }
+    const list=document.createElement("div"); list.className="day-list";
+    const todays=items.filter(it=>it.date===isoDate(d)).sort(sortByDateTime);
+    if(todays.length===0){ const p=document.createElement("p"); p.className="muted"; p.textContent="—"; list.appendChild(p); }
+    else todays.forEach(it=> list.appendChild(itemCard(it)));
     calContent.appendChild(list);
-  }
-  else if(state.viewMode==="week"){
-    const grid = document.createElement("div"); grid.className="week-grid"; // vertical column
-    const start = weekStart(d);
+  }else if(state.viewMode==="week"){
+    const grid=document.createElement("div"); grid.className="week-grid";
+    const start=weekStart(d);
     for(let i=0;i<7;i++){
-      const day = addDays(start,i);
-      const col = document.createElement("div"); col.className="week-col";
-      const h4 = document.createElement("h4"); h4.textContent = day.toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
-      const dayItems = items.filter(it=>it.date===isoDate(day)).sort(sortByDateTime);
+      const day=addDays(start,i);
+      const col=document.createElement("div"); col.className="week-col";
+      const h4=document.createElement("h4"); h4.textContent = day.toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short"}); col.appendChild(h4);
+      const dayItems=items.filter(it=>it.date===isoDate(day)).sort(sortByDateTime);
       if(dayItems.length===0){ const p=document.createElement("p"); p.className="muted"; p.textContent="—"; col.appendChild(p); }
       else dayItems.forEach(it=> col.appendChild(itemCard(it)));
       grid.appendChild(col);
     }
     calContent.appendChild(grid);
-  }
-  else{ // month
-    const grid = document.createElement("div"); grid.className="month-grid";
-    const first = new Date(d.getFullYear(), d.getMonth(), 1);
-    const start = weekStart(first);
+  }else{
+    const grid=document.createElement("div"); grid.className="month-grid";
+    const first=new Date(d.getFullYear(), d.getMonth(), 1);
+    const start=weekStart(first);
     for(let i=0;i<42;i++){
-      const day = addDays(start,i);
-      const cell = document.createElement("div"); cell.className="month-cell";
-      const inMonth = (day.getMonth() === d.getMonth()); if(!inMonth) cell.style.opacity=.45;
-      const head = document.createElement("div"); head.className="d"; head.textContent = day.getDate(); cell.appendChild(head);
-      const dayItems = items.filter(it=>it.date===isoDate(day));
-      if(dayItems.length){ const dots=document.createElement("div"); dayItems.slice(0,5).forEach(()=>{const dot=document.createElement("span"); dot.className="dot"; dots.appendChild(dot);}); cell.appendChild(dots); }
+      const day=addDays(start,i);
+      const cell=document.createElement("div"); cell.className="month-cell";
+      const inMonth=(day.getMonth()===d.getMonth()); if(!inMonth) cell.style.opacity=.45;
+      const head=document.createElement("div"); head.className="d"; head.textContent=day.getDate(); cell.appendChild(head);
+      const dayItems=items.filter(it=>it.date===isoDate(day));
+      if(dayItems.length){ const dots=document.createElement("div"); dayItems.slice(0,5).forEach(()=>{ const dot=document.createElement("span"); dot.className="dot"; dots.appendChild(dot); }); cell.appendChild(dots); }
       cell.addEventListener("click", ()=>{ state.viewMode="day"; state.selectedDate=isoDate(day); viewModeBtn.textContent="Day ▾"; render(); });
       grid.appendChild(cell);
     }
@@ -286,31 +271,31 @@ function renderCalendar(){
 }
 
 function itemCard(it){
-  const a = document.createElement("div"); a.className="card";
-  a.innerHTML = `<div class="card-row">
+  const a=document.createElement("div"); a.className="card";
+  a.innerHTML=`<div class="card-row">
       <div class="card-title">${escapeHTML(it.title)}</div>
-      <div class="card-date">${it.time || ""}</div>
+      <div class="card-date">${it.time||""}</div>
     </div>
     ${it.notes?`<div class="card-notes">${escapeHTML(it.notes)}</div>`:""}
     <div class="card-actions">
       <button class="mini-btn edit">Edit</button>
       <button class="mini-btn danger delete">Delete</button>
     </div>`;
-  $(".edit",a).addEventListener("click", ()=> { closeAllOverlays(); openItemModal(it); });
-  $(".delete",a).addEventListener("click", ()=> deleteItem(it.id));
+  a.querySelector(".edit").addEventListener("click", ()=>{ closeAllOverlays(); openItemModal(it); });
+  a.querySelector(".delete").addEventListener("click", ()=> deleteItem(it.id));
   return a;
 }
 
 /* -------- GESTURES -------- */
 function enableCalendarSwipe(){
   let sx=0, sy=0, dragging=false;
-  calContent.addEventListener("touchstart", (e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; }, {passive:true});
-  calContent.addEventListener("touchmove", (e)=>{
+  calContent.addEventListener("touchstart",(e)=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dragging=true; },{passive:true});
+  calContent.addEventListener("touchmove",(e)=>{
     if(!dragging) return;
     const t=e.touches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)){ dragging=false; if(dx<0) goNext(); else goPrev(); }
-  }, {passive:true});
-  calContent.addEventListener("touchend", ()=> dragging=false);
+  },{passive:true});
+  calContent.addEventListener("touchend",()=> dragging=false);
 }
 function goNext(){ const d=new Date(state.selectedDate); state.selectedDate = isoDate(state.viewMode==="day"?addDays(d,1):state.viewMode==="week"?addDays(d,7):addMonths(d,1)); render(); }
 function goPrev(){ const d=new Date(state.selectedDate); state.selectedDate = isoDate(state.viewMode==="day"?addDays(d,-1):state.viewMode==="week"?addDays(d,-7):addMonths(d,-1)); render(); }
@@ -410,7 +395,7 @@ function applyTheme(name){
   else if(name==="porcelaine") html.setAttribute("data-theme","porcelaine");
 }
 
-/* -------- AUDIO -------- */
+/* -------- Audio -------- */
 function playBeep(){
   try{
     const style = beepStyleSelect?.value || state.data.settings.beepStyle || "classic";
